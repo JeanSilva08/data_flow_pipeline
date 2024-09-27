@@ -1,0 +1,9 @@
+# Ignore environment configuration
+.env
+
+# Ignore Python cache and compiled files
+__pycache__/
+*.py[cod]
+
+# Ignore SQLite database
+*.sqlite3

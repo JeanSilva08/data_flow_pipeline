@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ac9f3f07-5e68-4bef-85de-1fb9ab9f2d6d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../65496391" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/.idea/mainstreet_data_automation.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/Main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/instagram_fetching/InstaFallowersFetcher.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/instagram_fetching/insta_followers.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/spotify_fetching/MonthlyListeners.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/spotify_fetching/PlaylistsSptfy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/spotify_fetching/SptfyFollowers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/spotify_fetching/TotalStreamsSptfy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/spotify_fetching/TotalTracks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/spotify_fetching/constants.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/spotify_fetching/playcount.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/youtube_fetching/YoutubeFeatFetcher.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/youtube_fetching/YoutubeFetcher.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_fetching/youtube_fetching/YoutubeMscFetcher.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/data_processing/DataProcessor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../mainstreet_data_automation/sheets_automation/UpdateSheets.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../portfolio" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../pythonProject/Numbers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../target/faturamento.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../target/questao1.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../target/questao2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../target/questao3.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../target/questao4.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../target/questao5.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/db_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config/db_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/artist.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/artist.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/track.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2mZcI7JdwxSTNnGhV8hL19FuG3W" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.artist.executor&quot;: &quot;Run&quot;,
+    &quot;Python.db_connector.executor&quot;: &quot;Run&quot;,
+    &quot;Python.db_setup.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.monthly_listeners_scrapper.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/mrsepiol/Dev/data_flow_pipeline&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-0e3be3396995-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.23339.19" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ac9f3f07-5e68-4bef-85de-1fb9ab9f2d6d" name="Changes" comment="" />
+      <created>1727287457369</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1727287457369</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName=".env" />
+  </component>
+</project>
