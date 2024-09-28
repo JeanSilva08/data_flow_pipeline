@@ -27,7 +27,7 @@ class Song:
     def update_in_db(self, db_connector, song_id):
         cursor = db_connector.connection.cursor()
 
-        song_query = "UPDATE songs SET name = %s, main_artist_id = %s, spotify_id = %s, youtube_id = %s WHERE id = %s"
+        song_query = "UPDATE songs SET name = %s, main_artist_id = %s, spotify_id = %s, youtube_id = %s WHERE song_id = %s"
         cursor.execute(song_query, (self.name, self.main_artist_id, self.spotify_id, self.youtube_id, song_id))
 
         # Optionally update featured artists if necessary
@@ -37,7 +37,7 @@ class Song:
     @staticmethod
     def delete_from_db(db_connector, song_id):
         cursor = db_connector.connection.cursor()
-        song_query = "DELETE FROM songs WHERE id = %s"
+        song_query = "DELETE FROM songs WHERE song_id = %s"
         cursor.execute(song_query, (song_id,))
         db_connector.connection.commit()
         print(f"Song with ID {song_id} deleted successfully")
