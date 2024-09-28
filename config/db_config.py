@@ -4,9 +4,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'port': int(os.getenv('DB_PORT', 3306)),
-    'user': os.getenv('DB_USER', 'root'),
+    'host': os.getenv('DB_HOST', ''),
+    'port': int(os.getenv('DB_PORT', )),
+    'user': os.getenv('DB_USER', ''),
     'password': os.getenv('DB_PASSWORD', ''),
-    'database': os.getenv('DB_NAME', 'mainstreet_data_pipeline')
+    'database': os.getenv('DB_NAME', '')
 }
