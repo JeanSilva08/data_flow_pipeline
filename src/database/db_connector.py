@@ -20,8 +20,10 @@ class DBConnector:
             )
             if self.connection.is_connected():
                 print("Connection to the database established successfully")
+                return self.connection  # Return the connection object
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
+            return None  # Return None if connection fails
 
     def close(self):
         if self.connection.is_connected():

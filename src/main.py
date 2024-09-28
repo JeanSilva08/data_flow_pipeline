@@ -2,6 +2,7 @@ from src.database.db_connector import DBConnector
 from src.models.artist import Artist
 from src.models.song import Song
 from dotenv import load_dotenv
+from src.data_fetcher.spotify_monthly_listeners import MonthlyListeners
 import os
 
 load_dotenv()
@@ -24,7 +25,8 @@ def main():
         print("4: Add a Song")
         print("5: Edit a Song")
         print("6: Delete a Song")
-        print("7: Exit")
+        print("7: Ouvintes Mensais")
+        print("8: Exit")
 
         choice = input("Enter your choice: ").strip()
 
@@ -100,7 +102,13 @@ def main():
             song_id = input("Enter Song ID to delete: ")
             Song.delete_from_db(db, song_id)
 
+
         elif choice == '7':
+            print("Fetching monthly listeners for all artists...")
+            listeners_fetcher = MonthlyListeners(db)  # Pass the db instance
+            listeners_fetcher.update_all_artists()
+
+        elif choice == '8':
             print("Exiting...")
             break
 
