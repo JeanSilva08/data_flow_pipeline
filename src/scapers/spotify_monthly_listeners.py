@@ -19,7 +19,7 @@ class MonthlyListeners:
         chrome_options.add_argument('--disable-javascript')
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        service = Service(executable_path='/usr/local/bin/chromedriver')
+        service = Service(executable_path='/usr/bin/chromedriver')
         return webdriver.Chrome(service=service, options=chrome_options)
 
     def fetch_listeners_from_tabs(self, artist_urls):

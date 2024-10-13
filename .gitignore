@@ -7,3 +7,6 @@ __pycache__/
 
 # Ignore SQLite database
 *.sqlite3
+
+# Ignore API'S credentials
+oauth.json

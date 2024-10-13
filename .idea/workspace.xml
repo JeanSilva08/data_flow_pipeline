@@ -7,8 +7,11 @@
     <list default="true" id="ac9f3f07-5e68-4bef-85de-1fb9ab9f2d6d" name="Changes" comment="">
       <change afterPath="$PROJECT_DIR$/../65496391" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../portfolio" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data_fetcher/spotify_monthly_listeners.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data_fetcher/spotify_monthly_listeners.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/oauth.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/oauth.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data_fetcher/spotify_monthly_listeners.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/scapers/spotify_monthly_listeners.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +44,7 @@
     &quot;Python.artist.executor&quot;: &quot;Run&quot;,
     &quot;Python.db_connector.executor&quot;: &quot;Run&quot;,
     &quot;Python.db_setup.executor&quot;: &quot;Run&quot;,
+    &quot;Python.insert_bot.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
     &quot;Python.monthly_listeners_scrapper.executor&quot;: &quot;Run&quot;,
     &quot;Python.spotify_monthly_listeners.executor&quot;: &quot;Run&quot;,
@@ -50,6 +54,11 @@
     &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/scapers" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

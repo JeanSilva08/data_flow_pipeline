@@ -1,14 +1,16 @@
 from src.database.db_connector import DBConnector
 from src.models.artist import Artist
 from src.models.song import Song
+from src.models.playlist import Playlist
+from src.models.album import Album
 from dotenv import load_dotenv
-from src.data_fetcher.spotify_monthly_listeners import MonthlyListeners
+from src.scapers.spotify_monthly_listeners import MonthlyListeners
 import os
 
 load_dotenv()
 
-
 def main():
+    # Initialize the database connection
     db = DBConnector(
         host=os.getenv('DB_HOST'),
         database=os.getenv('DB_NAME'),
@@ -18,20 +20,27 @@ def main():
     db.connect()
 
     while True:
-        print("\nChoose an option:")
-        print("1: Add an Artist")
-        print("2: Edit an Artist")
-        print("3: Delete an Artist")
-        print("4: Add a Song")
-        print("5: Edit a Song")
-        print("6: Delete a Song")
-        print("7: Ouvintes Mensais")
-        print("8: Exit")
+        # Display the menu
+        print("\nEscolha uma opção:")
+        print("1: Adicionar Aritista")
+        print("2: Editar Artista")
+        print("3: Deletar Artista")
+        print("4: Adicionar Música")
+        print("5: Editar Música")
+        print("6: Deletar Música")
+        print("7: Adicionar Playlist")
+        print("8: Editar Playlist")
+        print("9: Deletar Playlist")
+        print("10: Adicionar Álbum")
+        print("11: Editar Álbum")
+        print("12: Deletar Álbum")
+        print("13: Ouvintes Mensais")
+        print("14: Sair")
 
+        # Get user input
         choice = input("Enter your choice: ").strip()
 
-        if choice == '1':
-            print("\nEnter artist details:")
+        if choice == '1':  # Add Artist
             artist_name = input("Artist Name: ")
             spotify_id = input("Spotify ID (optional): ")
             youtube_id = input("YouTube ID (optional): ")
@@ -43,9 +52,8 @@ def main():
             )
             new_artist.save_to_db(db)
 
-        elif choice == '2':
+        elif choice == '2':  # Edit Artist
             artist_id = input("Enter Artist ID to update: ")
-            print("\nEnter new artist details:")
             artist_name = input("Artist Name: ")
             spotify_id = input("Spotify ID (optional): ")
             youtube_id = input("YouTube ID (optional): ")
@@ -57,12 +65,11 @@ def main():
             )
             updated_artist.update_in_db(db, artist_id)
 
-        elif choice == '3':
+        elif choice == '3':  # Delete Artist
             artist_id = input("Enter Artist ID to delete: ")
             Artist.delete_from_db(db, artist_id)
 
-        elif choice == '4':
-            print("\nEnter song details:")
+        elif choice == '4':  # Add Song
             song_name = input("Song Name: ")
             main_artist_id = input("Main Artist ID: ")
             spotify_song_id = input("Spotify ID (optional): ")
@@ -82,9 +89,8 @@ def main():
             )
             new_song.save_to_db(db)
 
-        elif choice == '5':
+        elif choice == '5':  # Edit Song
             song_id = input("Enter Song ID to update: ")
-            print("\nEnter new song details:")
             song_name = input("Song Name: ")
             main_artist_id = input("Main Artist ID: ")
             spotify_song_id = input("Spotify ID (optional): ")
@@ -98,23 +104,48 @@ def main():
             )
             updated_song.update_in_db(db, song_id)
 
-        elif choice == '6':
+        elif choice == '6':  # Delete Song
             song_id = input("Enter Song ID to delete: ")
             Song.delete_from_db(db, song_id)
 
+        elif choice == '7':  # Add Playlist
+            playlist_name = input("Playlist Name (leave blank to use Spotify name): ")
+            spotify_playlist_id = input("Spotify Playlist ID: ")
+            Playlist.add_playlist_from_spotify(db, spotify_playlist_id, playlist_name)
 
-        elif choice == '7':
+        elif choice == '8':  # Edit Playlist
+            playlist_id = input("Enter Playlist ID to update: ")
+            playlist_name = input("Playlist Name: ")
+            spotify_playlist_id = input("Spotify Playlist ID (optional): ")
+
+            song_ids_input = input(
+                "Enter updated song IDs for the playlist (comma-separated): "
+            )
+            song_ids = [int(x.strip()) for x in song_ids_input.split(',')]
+
+            updated_playlist = Playlist(
+                name=playlist_name,
+                spotify_playlist_id=spotify_playlist_id or None
+            )
+            updated_playlist.update_in_db(db, playlist_id, song_ids)
+
+        elif choice == '9':  # Delete Playlist
+            playlist_id = input("Enter Playlist ID to delete: ")
+            Playlist.delete_from_db(db, playlist_id)
+
+        elif choice == '13':  # Fetch Monthly Listeners
             print("Fetching monthly listeners for all artists...")
             listeners_fetcher = MonthlyListeners(db)  # Pass the db instance
             listeners_fetcher.update_all_artists()
 
-        elif choice == '8':
+        elif choice == '14':  # Exit
             print("Exiting...")
             break
 
         else:
             print("Invalid choice, please try again.")
 
+    # Close the database connection
     db.close()
 
 if __name__ == "__main__":
