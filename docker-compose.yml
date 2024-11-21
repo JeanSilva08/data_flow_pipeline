@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    env_file:
+      - .env.docker  # This loads the new .env file
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}  # You can also reference here
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3307:3306"  # Exposing port 3307 for your host
+
+  app:
+    build: .
+    env_file:
+      - .env.docker  # Load the Docker-specific environment variables
+    depends_on:
+      - db

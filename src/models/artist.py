@@ -25,3 +25,27 @@ class Artist:
         cursor.execute(query, (artist_id,))
         db_connector.connection.commit()
         print(f"Artist with ID {artist_id} deleted successfully")
+
+    @classmethod
+    def get_by_id(cls, db, artist_id):
+        cursor = db.connection.cursor()
+        query = "SELECT * FROM artists WHERE artist_id = %s"
+        cursor.execute(query, (artist_id,))
+        result = cursor.fetchone()
+        if result:
+            return cls(result[1], result[2], result[3])  # Assuming result[1] is name, result[2] is spotify_id, etc.
+        return None
+
+    @classmethod
+    def get_all(cls, db):
+        cursor = db.connection.cursor()
+        query = "SELECT * FROM artists"
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        artists = []
+        for result in results:
+            artist = cls(result[1], result[2], result[3])  # Adjust according to your table's column order
+            artists.append(artist)
+
+        return artists

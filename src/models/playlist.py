@@ -28,7 +28,8 @@ class Playlist:
         self.add_songs_to_playlist(db_connector, playlist_id, song_ids)
         print(f"Playlist {self.name} updated in DB.")
 
-    def delete_from_db(self, db_connector, playlist_id):
+    @staticmethod
+    def delete_from_db(db_connector, playlist_id):
         cursor = db_connector.connection.cursor()
         query = "DELETE FROM playlists WHERE playlist_id = %s"
         cursor.execute(query, (playlist_id,))

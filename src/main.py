@@ -1,11 +1,15 @@
-from src.database.db_connector import DBConnector
+from src.apis.spotify_api import fetch_and_store_artist_data
 from src.models.artist import Artist
 from src.models.song import Song
 from src.models.playlist import Playlist
-from src.models.album import Album
 from dotenv import load_dotenv
 from src.scapers.spotify_monthly_listeners import MonthlyListeners
+import sys
 import os
+from src.database.db_connector import DBConnector
+
+# Add the project root to the system path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 load_dotenv()
 
@@ -35,7 +39,8 @@ def main():
         print("11: Editar Álbum")
         print("12: Deletar Álbum")
         print("13: Ouvintes Mensais")
-        print("14: Sair")
+        print("14: Spotify Info")
+        print("15: Sair")
 
         # Get user input
         choice = input("Enter your choice: ").strip()
@@ -111,39 +116,56 @@ def main():
         elif choice == '7':  # Add Playlist
             playlist_name = input("Playlist Name (leave blank to use Spotify name): ")
             spotify_playlist_id = input("Spotify Playlist ID: ")
-            Playlist.add_playlist_from_spotify(db, spotify_playlist_id, playlist_name)
+            try:
+                Playlist.add_playlist_from_spotify(db, spotify_playlist_id, playlist_name)
+                print(f"Playlist '{playlist_name}' successfully added!")
+            except Exception as e:
+                print(f"Error adding playlist: {e}")
 
         elif choice == '8':  # Edit Playlist
-            playlist_id = input("Enter Playlist ID to update: ")
-            playlist_name = input("Playlist Name: ")
-            spotify_playlist_id = input("Spotify Playlist ID (optional): ")
-
-            song_ids_input = input(
-                "Enter updated song IDs for the playlist (comma-separated): "
-            )
-            song_ids = [int(x.strip()) for x in song_ids_input.split(',')]
-
-            updated_playlist = Playlist(
-                name=playlist_name,
-                spotify_playlist_id=spotify_playlist_id or None
-            )
+            playlist_id = input("Enter Playlist ID to update: ").strip()
+            playlist_name = input("Playlist Name: ").strip()
+            spotify_playlist_id = input("Spotify Playlist ID (optional): ").strip()
+            song_ids_input = input("Enter updated song IDs for the playlist (comma-separated): ").strip()
+            # Verificar se a entrada está vazia
+            if song_ids_input:
+                song_ids = [int(x.strip()) for x in song_ids_input.split(',')]
+            else:
+                song_ids = []  # Se vazio, atribuir uma lista vazia
+            updated_playlist = Playlist(name=playlist_name, spotify_playlist_id=spotify_playlist_id or None)
             updated_playlist.update_in_db(db, playlist_id, song_ids)
 
         elif choice == '9':  # Delete Playlist
-            playlist_id = input("Enter Playlist ID to delete: ")
-            Playlist.delete_from_db(db, playlist_id)
+            playlist_id = input("Enter Playlist ID to delete: ").strip()
+            Playlist.delete_from_db(db, playlist_id)  # Certifique-se de passar `db`
 
         elif choice == '13':  # Fetch Monthly Listeners
             print("Fetching monthly listeners for all artists...")
             listeners_fetcher = MonthlyListeners(db)  # Pass the db instance
             listeners_fetcher.update_all_artists()
 
-        elif choice == '14':  # Exit
+        elif choice == '14':  # Fetch and Store Spotify Artist Data
+            print("Fetching and storing Spotify artist data...")
+            # Fetch the Spotify ID from the database for all artists
+            artists = Artist.get_all(db)  # This will now work
+            for artist in artists:
+                if artist.spotify_id:  # Check if the artist has a Spotify ID
+                    try:
+                        # Fetch and store data for this artist using the Spotify ID
+                        fetch_and_store_artist_data(db, artist.spotify_id)
+                        print(f"Data for artist {artist.name} (Spotify ID: {artist.spotify_id}) saved successfully.")
+                    except Exception as e:
+                        print(
+                            f"Error fetching and storing data for artist {artist.name} (Spotify ID: {artist.spotify_id}): {e}")
+                else:
+                    print(f"Artist {artist.name} does not have a Spotify ID. Skipping...")
+
+
+
+
+        elif choice == '15':  # Exit
             print("Exiting...")
             break
-
-        else:
-            print("Invalid choice, please try again.")
 
     # Close the database connection
     db.close()

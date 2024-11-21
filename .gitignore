@@ -1,6 +1,3 @@
-# Ignore environment configuration
-.env
-
 # Ignore Python cache and compiled files
 __pycache__/
 *.py[cod]
@@ -10,3 +7,6 @@ __pycache__/
 
 # Ignore API'S credentials
 oauth.json
+
+# Ignore environment variables file
+.env
