@@ -10,5 +10,4 @@ oauth.json
 
 # Ignore environment variables file
 .env
-
 .env.docker
