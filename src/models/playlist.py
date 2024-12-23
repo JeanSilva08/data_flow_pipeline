@@ -1,4 +1,4 @@
-from src.apis.spotify_api import fetch_playlist_data
+
 
 
 class Playlist:
@@ -46,6 +46,7 @@ class Playlist:
 
     @classmethod
     def add_playlist_from_spotify(cls, db_connector, spotify_playlist_id, playlist_name=None):
+        from src.apis.spotify_api import fetch_playlist_data
         try:
             # Fetch playlist data from Spotify
             playlist_data = fetch_playlist_data(spotify_playlist_id)

@@ -1,4 +1,5 @@
-from src.apis.spotify_api import fetch_and_store_artist_data
+from src.apis.spotify_api import fetch_and_store_artist_data, fetch_and_store_songs_by_artist
+from src.models.album import Album
 from src.models.artist import Artist
 from src.models.song import Song
 from src.models.playlist import Playlist
@@ -26,7 +27,7 @@ def main():
     while True:
         # Display the menu
         print("\nEscolha uma opção:")
-        print("1: Adicionar Aritista")
+        print("1: Adicionar Artista")
         print("2: Editar Artista")
         print("3: Deletar Artista")
         print("4: Adicionar Música")
@@ -35,12 +36,13 @@ def main():
         print("7: Adicionar Playlist")
         print("8: Editar Playlist")
         print("9: Deletar Playlist")
-        print("10: Adicionar Álbum")
-        print("11: Editar Álbum")
-        print("12: Deletar Álbum")
+        print("10: Adicionar Álbum")  # Add Album
+        print("11: Editar Álbum")  # Edit Album
+        print("12: Deletar Álbum")  # Delete Album
         print("13: Ouvintes Mensais")
         print("14: Spotify Info")
-        print("15: Sair")
+        print("15: Salvar todas as músicas")
+        print("16: Sair")
 
         # Get user input
         choice = input("Enter your choice: ").strip()
@@ -139,6 +141,31 @@ def main():
             playlist_id = input("Enter Playlist ID to delete: ").strip()
             Playlist.delete_from_db(db, playlist_id)  # Certifique-se de passar `db`
 
+        elif choice == '10':  # Add Album
+            album_name = input("Album Name: ")
+            artist_id = input("Artist ID: ")
+            spotify_album_id = input("Spotify Album ID (optional): ")
+            songs = []  # Default to an empty list if there are no songs initially
+            album = Album(name=album_name, artist_id=artist_id, songs=songs, spotify_album_id=spotify_album_id)
+            album.save_to_db(db)
+
+
+        elif choice == '11':  # Edit Album
+            album_id = input("Enter Album ID to update: ")
+            album_name = input("Album Name: ")
+            artist_id = input("Artist ID: ")
+            spotify_album_id = input("Spotify Album ID (optional): ")
+            # Use an empty list for songs, or fetch existing songs as needed
+            album = Album(name=album_name, artist_id=artist_id, songs=[], spotify_album_id=spotify_album_id)
+            album.update_in_db(db, album_id)
+
+
+        elif choice == '12':  # Delete Album
+            album_id = input("Enter Album ID to delete: ")
+            album = Album(name="", artist_id=0, songs=[])  # You can create a temporary album instance with the given ID
+            album.album_id = album_id  # Set the album_id from user input
+            album.delete_from_db(db)
+
         elif choice == '13':  # Fetch Monthly Listeners
             print("Fetching monthly listeners for all artists...")
             listeners_fetcher = MonthlyListeners(db)  # Pass the db instance
@@ -160,12 +187,18 @@ def main():
                 else:
                     print(f"Artist {artist.name} does not have a Spotify ID. Skipping...")
 
+        elif choice == '15':  # Fetch and Add Songs by Artist Spotify ID
+            artist_spotify_id = input("Enter the Artist Spotify ID: ").strip()
+            try:
+                fetch_and_store_songs_by_artist(db, artist_spotify_id)
+                print(f"Songs for artist with Spotify ID {artist_spotify_id} successfully added!")
+            except Exception as e:
+                print(f"Error fetching and adding songs: {e}")
 
-
-
-        elif choice == '15':  # Exit
+        elif choice == '16':  # Exit
             print("Exiting...")
             break
+
 
     # Close the database connection
     db.close()

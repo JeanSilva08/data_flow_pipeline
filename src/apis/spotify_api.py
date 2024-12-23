@@ -2,6 +2,8 @@ import requests
 import json
 import os
 from datetime import datetime
+from src.models.artist import Artist
+from src.models.song import Song
 
 
 def get_access_token():
@@ -85,4 +87,48 @@ def fetch_playlist_data(playlist_id):
         raise Exception(f"Failed to fetch playlist data: {response.status_code} {response.text}")
 
     return response.json()
+
+def fetch_and_store_songs_by_artist(db_connector, artist_spotify_id):
+    token = get_access_token()
+
+    # Fetch artist albums
+    albums_url = f'https://api.spotify.com/v1/artists/{artist_spotify_id}/albums'
+    headers = {'Authorization': f'Bearer {token}'}
+    albums_response = requests.get(albums_url, headers=headers)
+
+    if albums_response.status_code != 200:
+        raise Exception(f"Failed to fetch albums for artist {artist_spotify_id}: {albums_response.status_code} {albums_response.text}")
+
+    albums = albums_response.json()['items']
+    print(f"Found {len(albums)} albums for artist {artist_spotify_id}.")
+
+    for album in albums:
+        album_id = album['id']
+        album_name = album['name']
+
+        # Fetch tracks from the album
+        tracks_url = f'https://api.spotify.com/v1/albums/{album_id}/tracks'
+        tracks_response = requests.get(tracks_url, headers=headers)
+
+        if tracks_response.status_code != 200:
+            raise Exception(f"Failed to fetch tracks for album {album_id}: {tracks_response.status_code} {tracks_response.text}")
+
+        tracks = tracks_response.json()['items']
+
+        print(f"Found {len(tracks)} tracks in album '{album_name}'. Adding to database...")
+
+        for track in tracks:
+            track_name = track['name']
+            spotify_track_id = track['id']
+
+            # Insert track into database
+            new_song = Song(
+                name=track_name,
+                main_artist_id=None,  # Update this if you have artist mapping
+                spotify_id=spotify_track_id,
+                youtube_id=None,  # Leave as None for now
+                featured_artists=[]  # Handle featured artists if needed
+            )
+            new_song.save_to_db(db_connector)
+            print(f"Added track '{track_name}' to the database.")
 
