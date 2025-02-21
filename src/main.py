@@ -45,7 +45,7 @@ def main():
         print("16: Sair")
 
         # Get user input
-        choice = input("Enter your choice: ").strip()
+        choice = input("Digite a opção escolhida: ").strip()
 
         if choice == '1':  # Add Artist
             artist_name = input("Artist Name: ")

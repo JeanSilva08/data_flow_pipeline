@@ -7,7 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 class MonthlyListeners:
-    def __init__(self, db_connector, batch_size=5):
+    def __init__(self, db_connector, batch_size=2):
         self.db_connector = db_connector
         self.batch_size = batch_size  # Adjustable number of tabs to open at a time
         self.driver = self.setup_driver()
