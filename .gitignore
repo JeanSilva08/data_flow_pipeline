@@ -10,3 +10,9 @@ oauth.json
 
 # Ignore environment variables file
 .env
+
+init.sql
+
+docker-compose.yml
+
+Dockerfile

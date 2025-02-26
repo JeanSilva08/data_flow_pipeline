@@ -40,7 +40,7 @@ def main():
         print("11: Editar Álbum")  # Edit Album
         print("12: Deletar Álbum")  # Delete Album
         print("13: Ouvintes Mensais")
-        print("14: Spotify Info")
+        print("14: Seguidores Spotify")
         print("15: Salvar todas as músicas")
         print("16: Sair")
 

@@ -2,7 +2,6 @@ import requests
 import json
 import os
 from datetime import datetime
-from src.models.artist import Artist
 from src.models.song import Song
 
 

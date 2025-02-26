@@ -4,6 +4,7 @@ class Artist:
         self.spotify_id = spotify_id
         self.youtube_id = youtube_id
 
+
     def save_to_db(self, db_connector):
         cursor = db_connector.connection.cursor()
         query = "INSERT INTO artists (name, spotify_id, youtube_id) VALUES (%s, %s, %s)"

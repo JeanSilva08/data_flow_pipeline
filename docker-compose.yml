@@ -1,19 +1,45 @@
 version: '3.8'
 
 services:
-  db:
-    image: mysql:5.7
-    env_file:
-      - .env.docker  # This loads the new .env file
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}  # You can also reference here
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-    ports:
-      - "3307:3306"  # Exposing port 3307 for your host
-
   app:
     build: .
-    env_file:
-      - .env.docker  # Load the Docker-specific environment variables
+    container_name: data_flow_pipeline
     depends_on:
-      - db
+      db:
+        condition: service_healthy  # Waits for DB to be ready
+    environment:
+      - DB_HOST=mysql_db
+      - DB_NAME=mainstreet_data_pipeline
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+    volumes:
+      - .:/app
+    networks:
+      - data_network
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mainstreet_data_pipeline
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - data_network
+    healthcheck:  # <== Added this
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+
+volumes:
+  mysql_data:
+
+networks:
+  data_network:
+    driver: bridge
