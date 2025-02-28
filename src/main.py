@@ -206,6 +206,7 @@ def main():
         elif choice == '7':  # Add Playlist
             playlist_name = input("Playlist Name (leave blank to use Spotify name): ")
             spotify_playlist_id = input("Spotify Playlist ID: ")
+            spotify_url = input("Spotify URL (optional): ")
             try:
                 Playlist.add_playlist_from_spotify(db, spotify_playlist_id, playlist_name)
                 print(f"Playlist '{playlist_name}' successfully added!")
@@ -216,12 +217,17 @@ def main():
             playlist_id = input("Enter Playlist ID to update: ").strip()
             playlist_name = input("Playlist Name: ").strip()
             spotify_playlist_id = input("Spotify Playlist ID (optional): ").strip()
+            spotify_url = input("Spotify URL (optional): ").strip()
             song_ids_input = input("Enter updated song IDs for the playlist (comma-separated): ").strip()
             if song_ids_input:
                 song_ids = [int(x.strip()) for x in song_ids_input.split(',')]
             else:
                 song_ids = []
-            updated_playlist = Playlist(name=playlist_name, spotify_playlist_id=spotify_playlist_id or None)
+            updated_playlist = Playlist(
+                name=playlist_name,
+                spotify_playlist_id=spotify_playlist_id or None,
+                spotify_url=spotify_url or None
+            )
             updated_playlist.update_in_db(db, playlist_id, song_ids)
 
         elif choice == '9':  # Delete Playlist
@@ -231,25 +237,55 @@ def main():
         elif choice == '10':  # Add Album
             album_name = input("Album Name: ")
             artist_id = input("Artist ID: ")
+            number_related_on_release_position = input("Number Related on Release Position (e.g., 1, 2, 3): ")
             spotify_album_id = input("Spotify Album ID (optional): ")
-            songs = []
-            album = Album(name=album_name, artist_id=artist_id, songs=songs, spotify_album_id=spotify_album_id)
+            spotify_url = input("Spotify URL (optional): ")
+            youtube_id = input("YouTube ID (optional): ")
+            youtube_url = input("YouTube URL (optional): ")
+            youtube_music_id = input("YouTube Music ID (optional): ")
+            youtube_music_url = input("YouTube Music URL (optional): ")
+            album = Album(
+                name=album_name,
+                artist_id=artist_id,
+                number_related_on_release_position=number_related_on_release_position,
+                spotify_album_id=spotify_album_id or None,
+                spotify_url=spotify_url or None,
+                youtube_id=youtube_id or None,
+                youtube_url=youtube_url or None,
+                youtube_music_id=youtube_music_id or None,
+                youtube_music_url=youtube_music_url or None
+            )
             album.save_to_db(db)
 
         elif choice == '11':  # Edit Album
             album_id = input("Enter Album ID to update: ")
             album_name = input("Album Name: ")
             artist_id = input("Artist ID: ")
+            number_related_on_release_position = input("Number Related on Release Position (e.g., 1, 2, 3): ")
             spotify_album_id = input("Spotify Album ID (optional): ")
-            album = Album(name=album_name, artist_id=artist_id, songs=[], spotify_album_id=spotify_album_id)
+            spotify_url = input("Spotify URL (optional): ")
+            youtube_id = input("YouTube ID (optional): ")
+            youtube_url = input("YouTube URL (optional): ")
+            youtube_music_id = input("YouTube Music ID (optional): ")
+            youtube_music_url = input("YouTube Music URL (optional): ")
+            album = Album(
+                name=album_name,
+                artist_id=artist_id,
+                number_related_on_release_position=number_related_on_release_position,
+                spotify_album_id=spotify_album_id or None,
+                spotify_url=spotify_url or None,
+                youtube_id=youtube_id or None,
+                youtube_url=youtube_url or None,
+                youtube_music_id=youtube_music_id or None,
+                youtube_music_url=youtube_music_url or None
+            )
             album.update_in_db(db, album_id)
 
         elif choice == '12':  # Delete Album
             album_id = input("Enter Album ID to delete: ")
-            album = Album(name="", artist_id=0, songs=[])
+            album = Album(name="", artist_id=0)
             album.album_id = album_id
             album.delete_from_db(db)
-
         elif choice == '13':  # Fetch Monthly Listeners
             print("Fetching monthly listeners for all artists...")
             listeners_fetcher = MonthlyListeners(db)

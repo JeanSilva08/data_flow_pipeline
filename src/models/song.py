@@ -5,6 +5,7 @@ class Song:
         self,
         name,
         main_artist_id,
+        album_id=None,
         producer=None,
         beatmaker=None,
         record_label=None,
@@ -17,11 +18,11 @@ class Song:
         spotify_url=None,
         youtube_url=None,
         youtube_music_url=None,
-        album_id=None,
         featured_artists=None
     ):
         self.name = name
         self.main_artist_id = main_artist_id
+        self.album_id = album_id
         self.producer = producer
         self.beatmaker = beatmaker
         self.record_label = record_label
@@ -34,7 +35,6 @@ class Song:
         self.spotify_url = spotify_url
         self.youtube_url = youtube_url
         self.youtube_music_url = youtube_music_url
-        self.album_id = album_id
         self.featured_artists = featured_artists or []
 
     def calculate_days_from_release(self):
@@ -66,15 +66,15 @@ class Song:
 
         song_query = """
             INSERT INTO songs (
-                name, main_artist_id, producer, beatmaker, record_label, type,
+                name, main_artist_id, album_id, producer, beatmaker, record_label, type,
                 release_date, days_from_release, spotify_id, youtube_id,
-                youtube_music_id, spotify_url, youtube_url, youtube_music_url, album_id
+                youtube_music_id, spotify_url, youtube_url, youtube_music_url
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(song_query, (
-            self.name, self.main_artist_id, self.producer, self.beatmaker, self.record_label,
+            self.name, self.main_artist_id, self.album_id, self.producer, self.beatmaker, self.record_label,
             self.type, formatted_release_date, self.days_from_release, self.spotify_id, self.youtube_id,
-            self.youtube_music_id, self.spotify_url, self.youtube_url, self.youtube_music_url, self.album_id
+            self.youtube_music_id, self.spotify_url, self.youtube_url, self.youtube_music_url
         ))
         song_id = cursor.lastrowid
 
@@ -97,16 +97,16 @@ class Song:
 
         song_query = """
             UPDATE songs SET
-                name = %s, main_artist_id = %s, producer = %s, beatmaker = %s,
+                name = %s, main_artist_id = %s, album_id = %s, producer = %s, beatmaker = %s,
                 record_label = %s, type = %s, release_date = %s, days_from_release = %s,
                 spotify_id = %s, youtube_id = %s, youtube_music_id = %s,
-                spotify_url = %s, youtube_url = %s, youtube_music_url = %s, album_id = %s
+                spotify_url = %s, youtube_url = %s, youtube_music_url = %s
             WHERE song_id = %s
         """
         cursor.execute(song_query, (
-            self.name, self.main_artist_id, self.producer, self.beatmaker, self.record_label,
+            self.name, self.main_artist_id, self.album_id, self.producer, self.beatmaker, self.record_label,
             self.type, formatted_release_date, self.days_from_release, self.spotify_id, self.youtube_id,
-            self.youtube_music_id, self.spotify_url, self.youtube_url, self.youtube_music_url, self.album_id, song_id
+            self.youtube_music_id, self.spotify_url, self.youtube_url, self.youtube_music_url, song_id
         ))
 
         # Optionally update featured artists if necessary

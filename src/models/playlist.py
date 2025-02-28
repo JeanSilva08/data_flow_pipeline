@@ -1,16 +1,14 @@
-
-
-
 class Playlist:
-    def __init__(self, name, spotify_playlist_id=None):
+    def __init__(self, name, spotify_playlist_id=None, spotify_url=None):
         self.name = name
         self.spotify_playlist_id = spotify_playlist_id
+        self.spotify_url = spotify_url
         self.song_ids = []
 
     def save_to_db(self, db_connector, song_ids):
         cursor = db_connector.connection.cursor()
-        query = "INSERT INTO playlists (name, spotify_playlist_id) VALUES (%s, %s)"
-        cursor.execute(query, (self.name, self.spotify_playlist_id))
+        query = "INSERT INTO playlists (name, spotify_playlist_id, spotify_url) VALUES (%s, %s, %s)"
+        cursor.execute(query, (self.name, self.spotify_playlist_id, self.spotify_url))
 
         # Get the last inserted playlist ID
         playlist_id = cursor.lastrowid
@@ -21,8 +19,8 @@ class Playlist:
 
     def update_in_db(self, db_connector, playlist_id, song_ids):
         cursor = db_connector.connection.cursor()
-        query = "UPDATE playlists SET name = %s, spotify_playlist_id = %s WHERE playlist_id = %s"
-        cursor.execute(query, (self.name, self.spotify_playlist_id, playlist_id))
+        query = "UPDATE playlists SET name = %s, spotify_playlist_id = %s, spotify_url = %s WHERE playlist_id = %s"
+        cursor.execute(query, (self.name, self.spotify_playlist_id, self.spotify_url, playlist_id))
         db_connector.connection.commit()
 
         self.add_songs_to_playlist(db_connector, playlist_id, song_ids)
@@ -69,7 +67,11 @@ class Playlist:
                 song_ids.append(idx)  # Dummy song IDs for now
 
             # Create a new playlist instance and save it to the database
-            new_playlist = cls(name=playlist_name, spotify_playlist_id=spotify_playlist_id)
+            new_playlist = cls(
+                name=playlist_name,
+                spotify_playlist_id=spotify_playlist_id,
+                spotify_url=playlist_data['external_urls']['spotify']  # Add Spotify URL
+            )
             new_playlist.save_to_db(db_connector, song_ids)
 
         except Exception as e:
