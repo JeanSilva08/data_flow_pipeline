@@ -49,26 +49,74 @@ def main():
 
         if choice == '1':  # Add Artist
             artist_name = input("Artist Name: ")
+            category = input("Category: ")
+            r_label = input("Record Label: ")
             spotify_id = input("Spotify ID (optional): ")
             youtube_id = input("YouTube ID (optional): ")
+            Instagram_id = input("Instagram ID (optional): ")
+            TikTok_id = input("TikTok ID (optional): ")
+            Twitter_id = input("Twitter ID (optional): ")
+            Twitch_id = input("Twitch ID (optional): ")
+            Spotify_url = input("Spotify URL (optional): ")
+            youtube_url = input("YouTube URL (optional): ")
+            instagram_url = input("Instagram URL (optional): ")
+            tiktok_url = input("TikTok URL (optional): ")
+            twitter_url = input("Twitter URL (optional): ")
+            twitch_url = input("Twitch URL (optional): ")
 
             new_artist = Artist(
                 name=artist_name,
+                category=category,
+                r_label=r_label,
                 spotify_id=spotify_id or None,
-                youtube_id=youtube_id or None
+                youtube_id=youtube_id or None,
+                Instagram_id=Instagram_id or None,
+                TikTok_id=TikTok_id or None,
+                Twitter_id=Twitter_id or None,
+                Twitch_id=Twitch_id or None,
+                Spotify_url=Spotify_url or None,
+                youtube_url=youtube_url or None,
+                instagram_url=instagram_url or None,
+                tiktok_url=tiktok_url or None,
+                twitter_url=twitter_url or None,
+                twitch_url=twitch_url or None
             )
             new_artist.save_to_db(db)
 
         elif choice == '2':  # Edit Artist
             artist_id = input("Enter Artist ID to update: ")
             artist_name = input("Artist Name: ")
+            category = input("Category: ")
+            r_label = input("Record Label: ")
             spotify_id = input("Spotify ID (optional): ")
             youtube_id = input("YouTube ID (optional): ")
+            Instagram_id = input("Instagram ID (optional): ")
+            TikTok_id = input("TikTok ID (optional): ")
+            Twitter_id = input("Twitter ID (optional): ")
+            Twitch_id = input("Twitch ID (optional): ")
+            Spotify_url = input("Spotify URL (optional): ")
+            youtube_url = input("YouTube URL (optional): ")
+            instagram_url = input("Instagram URL (optional): ")
+            tiktok_url = input("TikTok URL (optional): ")
+            twitter_url = input("Twitter URL (optional): ")
+            twitch_url = input("Twitch URL (optional): ")
 
             updated_artist = Artist(
                 name=artist_name,
+                category=category,
+                r_label=r_label,
                 spotify_id=spotify_id or None,
-                youtube_id=youtube_id or None
+                youtube_id=youtube_id or None,
+                Instagram_id=Instagram_id or None,
+                TikTok_id=TikTok_id or None,
+                Twitter_id=Twitter_id or None,
+                Twitch_id=Twitch_id or None,
+                Spotify_url=Spotify_url or None,
+                youtube_url=youtube_url or None,
+                instagram_url=instagram_url or None,
+                tiktok_url=tiktok_url or None,
+                twitter_url=twitter_url or None,
+                twitch_url=twitch_url or None
             )
             updated_artist.update_in_db(db, artist_id)
 
@@ -79,8 +127,18 @@ def main():
         elif choice == '4':  # Add Song
             song_name = input("Song Name: ")
             main_artist_id = input("Main Artist ID: ")
-            spotify_song_id = input("Spotify ID (optional): ")
-            youtube_song_id = input("YouTube ID (optional): ")
+            producer = input("Producer: ")
+            beatmaker = input("Beatmaker: ")
+            record_label = input("Record Label: ")
+            type = input("Type (e.g., Single, Album): ")
+            release_date = input("Release Date (DD-MM-YYYY): ")
+            spotify_id = input("Spotify ID (optional): ")
+            youtube_id = input("YouTube ID (optional): ")
+            youtube_music_id = input("YouTube Music ID (optional): ")
+            spotify_url = input("Spotify URL (optional): ")
+            youtube_url = input("YouTube URL (optional): ")
+            youtube_music_url = input("YouTube Music URL (optional): ")
+            album_id = input("Album ID (optional): ")
 
             featured_artists_input = input(
                 "Enter featured artist IDs (comma-separated, or leave blank if none): "
@@ -90,8 +148,18 @@ def main():
             new_song = Song(
                 name=song_name,
                 main_artist_id=main_artist_id,
-                spotify_id=spotify_song_id or None,
-                youtube_id=youtube_song_id or None,
+                producer=producer,
+                beatmaker=beatmaker,
+                record_label=record_label,
+                type=type,
+                release_date=release_date,
+                spotify_id=spotify_id or None,
+                youtube_id=youtube_id or None,
+                youtube_music_id=youtube_music_id or None,
+                spotify_url=spotify_url or None,
+                youtube_url=youtube_url or None,
+                youtube_music_url=youtube_music_url or None,
+                album_id=album_id or None,
                 featured_artists=featured_artists
             )
             new_song.save_to_db(db)
@@ -100,14 +168,34 @@ def main():
             song_id = input("Enter Song ID to update: ")
             song_name = input("Song Name: ")
             main_artist_id = input("Main Artist ID: ")
-            spotify_song_id = input("Spotify ID (optional): ")
-            youtube_song_id = input("YouTube ID (optional): ")
+            producer = input("Producer: ")
+            beatmaker = input("Beatmaker: ")
+            record_label = input("Record Label: ")
+            type = input("Type (e.g., Single, Album): ")
+            release_date = input("Release Date (DD-MM-YYYY): ")
+            spotify_id = input("Spotify ID (optional): ")
+            youtube_id = input("YouTube ID (optional): ")
+            youtube_music_id = input("YouTube Music ID (optional): ")
+            spotify_url = input("Spotify URL (optional): ")
+            youtube_url = input("YouTube URL (optional): ")
+            youtube_music_url = input("YouTube Music URL (optional): ")
+            album_id = input("Album ID (optional): ")
 
             updated_song = Song(
                 name=song_name,
                 main_artist_id=main_artist_id,
-                spotify_id=spotify_song_id or None,
-                youtube_id=youtube_song_id or None
+                producer=producer,
+                beatmaker=beatmaker,
+                record_label=record_label,
+                type=type,
+                release_date=release_date,
+                spotify_id=spotify_id or None,
+                youtube_id=youtube_id or None,
+                youtube_music_id=youtube_music_id or None,
+                spotify_url=spotify_url or None,
+                youtube_url=youtube_url or None,
+                youtube_music_url=youtube_music_url or None,
+                album_id=album_id or None
             )
             updated_song.update_in_db(db, song_id)
 
@@ -129,61 +217,54 @@ def main():
             playlist_name = input("Playlist Name: ").strip()
             spotify_playlist_id = input("Spotify Playlist ID (optional): ").strip()
             song_ids_input = input("Enter updated song IDs for the playlist (comma-separated): ").strip()
-            # Verificar se a entrada está vazia
             if song_ids_input:
                 song_ids = [int(x.strip()) for x in song_ids_input.split(',')]
             else:
-                song_ids = []  # Se vazio, atribuir uma lista vazia
+                song_ids = []
             updated_playlist = Playlist(name=playlist_name, spotify_playlist_id=spotify_playlist_id or None)
             updated_playlist.update_in_db(db, playlist_id, song_ids)
 
         elif choice == '9':  # Delete Playlist
             playlist_id = input("Enter Playlist ID to delete: ").strip()
-            Playlist.delete_from_db(db, playlist_id)  # Certifique-se de passar `db`
+            Playlist.delete_from_db(db, playlist_id)
 
         elif choice == '10':  # Add Album
             album_name = input("Album Name: ")
             artist_id = input("Artist ID: ")
             spotify_album_id = input("Spotify Album ID (optional): ")
-            songs = []  # Default to an empty list if there are no songs initially
+            songs = []
             album = Album(name=album_name, artist_id=artist_id, songs=songs, spotify_album_id=spotify_album_id)
             album.save_to_db(db)
-
 
         elif choice == '11':  # Edit Album
             album_id = input("Enter Album ID to update: ")
             album_name = input("Album Name: ")
             artist_id = input("Artist ID: ")
             spotify_album_id = input("Spotify Album ID (optional): ")
-            # Use an empty list for songs, or fetch existing songs as needed
             album = Album(name=album_name, artist_id=artist_id, songs=[], spotify_album_id=spotify_album_id)
             album.update_in_db(db, album_id)
 
-
         elif choice == '12':  # Delete Album
             album_id = input("Enter Album ID to delete: ")
-            album = Album(name="", artist_id=0, songs=[])  # You can create a temporary album instance with the given ID
-            album.album_id = album_id  # Set the album_id from user input
+            album = Album(name="", artist_id=0, songs=[])
+            album.album_id = album_id
             album.delete_from_db(db)
 
         elif choice == '13':  # Fetch Monthly Listeners
             print("Fetching monthly listeners for all artists...")
-            listeners_fetcher = MonthlyListeners(db)  # Pass the db instance
+            listeners_fetcher = MonthlyListeners(db)
             listeners_fetcher.update_all_artists()
 
         elif choice == '14':  # Fetch and Store Spotify Artist Data
             print("Fetching and storing Spotify artist data...")
-            # Fetch the Spotify ID from the database for all artists
-            artists = Artist.get_all(db)  # This will now work
+            artists = Artist.get_all(db)
             for artist in artists:
-                if artist.spotify_id:  # Check if the artist has a Spotify ID
+                if artist.spotify_id:
                     try:
-                        # Fetch and store data for this artist using the Spotify ID
                         fetch_and_store_artist_data(db, artist.spotify_id)
                         print(f"Data for artist {artist.name} (Spotify ID: {artist.spotify_id}) saved successfully.")
                     except Exception as e:
-                        print(
-                            f"Error fetching and storing data for artist {artist.name} (Spotify ID: {artist.spotify_id}): {e}")
+                        print(f"Error fetching and storing data for artist {artist.name} (Spotify ID: {artist.spotify_id}): {e}")
                 else:
                     print(f"Artist {artist.name} does not have a Spotify ID. Skipping...")
 
@@ -198,7 +279,6 @@ def main():
         elif choice == '16':  # Exit
             print("Exiting...")
             break
-
 
     # Close the database connection
     db.close()
