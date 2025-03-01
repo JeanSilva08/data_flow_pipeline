@@ -331,12 +331,15 @@ def main():
             else:
                 print("Song not found.")
 
+
         elif choice == '18':  # Remove Song from Album
             song_id = input("Enter Song ID: ")
-
             song = Song.get_by_id(db, song_id)
             if song:
-                song.remove_from_album(db, song_id)
+                album_id = input("Enter Album ID: ")  # Prompt for the album ID
+                album_songs = AlbumSongs(db)
+                album_songs.remove_song_from_album(album_id, song_id)
+                print(f"Song {song_id} removed from album {album_id} successfully!")
             else:
                 print("Song not found.")
 

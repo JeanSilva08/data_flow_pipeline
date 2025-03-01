@@ -69,7 +69,6 @@ class Song:
         db_connector.connection.commit()
         print(f"Song '{self.name}' with ID {song_id} inserted successfully")
 
-  
     @classmethod
     def get_by_id(cls, db_connector, song_id):
         cursor = db_connector.connection.cursor(dictionary=True)
@@ -98,3 +97,11 @@ class Song:
             )
         else:
             return None
+
+    def remove_from_album(self, db_connector, song_id):
+        """
+        Removes a song from an album using the AlbumSongs class.
+        """
+        album_songs = AlbumSongs(db_connector)
+        album_songs.remove_song_from_album(self.album_id, song_id)
+        print(f"Song {song_id} removed from album {self.album_id}")
