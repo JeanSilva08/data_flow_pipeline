@@ -69,10 +69,11 @@ class Song:
         db_connector.connection.commit()
         print(f"Song '{self.name}' with ID {song_id} inserted successfully")
 
+  
     @classmethod
     def get_by_id(cls, db_connector, song_id):
         cursor = db_connector.connection.cursor(dictionary=True)
-        query = "SELECT * FROM songs WHERE id = %s"
+        query = "SELECT * FROM songs WHERE song_id = %s"  # Use the correct column name
         cursor.execute(query, (song_id,))
         song_data = cursor.fetchone()
 

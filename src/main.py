@@ -1,5 +1,6 @@
 from src.apis.spotify_api import fetch_and_store_artist_data, fetch_and_store_songs_by_artist
 from src.models.album import Album
+from src.models.album_songs import AlbumSongs
 from src.models.artist import Artist
 from src.models.song import Song
 from src.models.playlist import Playlist
@@ -324,7 +325,9 @@ def main():
 
             song = Song.get_by_id(db, song_id)  # Fetch song instance
             if song:
-                song.update_album(db, song_id, album_id)
+                album_songs = AlbumSongs(db)
+                album_songs.add_song_to_album(album_id, song_id)
+                print(f"Song {song_id} added to album {album_id} successfully!")
             else:
                 print("Song not found.")
 
