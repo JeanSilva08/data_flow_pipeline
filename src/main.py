@@ -43,6 +43,8 @@ def main():
         print("14: Seguidores Spotify")
         print("15: Salvar todas as músicas")
         print("16: Sair")
+        print("17: Adicionar música a um álbum")
+        print("18: Remover música de um álbum")
 
         # Get user input
         choice = input("Digite a opção escolhida: ").strip()
@@ -315,6 +317,25 @@ def main():
         elif choice == '16':  # Exit
             print("Exiting...")
             break
+
+        elif choice == '17':  # Add Song to Album
+            song_id = input("Enter Song ID: ")
+            album_id = input("Enter Album ID: ")
+
+            song = Song.get_by_id(db, song_id)  # Fetch song instance
+            if song:
+                song.update_album(db, song_id, album_id)
+            else:
+                print("Song not found.")
+
+        elif choice == '18':  # Remove Song from Album
+            song_id = input("Enter Song ID: ")
+
+            song = Song.get_by_id(db, song_id)
+            if song:
+                song.remove_from_album(db, song_id)
+            else:
+                print("Song not found.")
 
     # Close the database connection
     db.close()

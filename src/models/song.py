@@ -1,4 +1,5 @@
-from datetime import datetime, date
+from src.models.album_songs import AlbumSongs
+
 
 class Song:
     def __init__(
@@ -37,33 +38,9 @@ class Song:
         self.youtube_music_url = youtube_music_url
         self.featured_artists = featured_artists or []
 
-    def calculate_days_from_release(self):
-        if self.release_date:
-            # Parse the release_date string in dd-mm-yyyy format into a date object
-            release_date = datetime.strptime(self.release_date, "%d-%m-%Y").date()
-            # Calculate the difference between today and the release date
-            today = date.today()
-            self.days_from_release = (today - release_date).days
-        else:
-            self.days_from_release = None
-
-    def format_release_date_for_db(self):
-        if self.release_date:
-            # Parse the release_date string in dd-mm-yyyy format into a date object
-            release_date = datetime.strptime(self.release_date, "%d-%m-%Y").date()
-            # Format it back to yyyy-mm-dd for the database
-            return release_date.strftime("%Y-%m-%d")
-        return None
-
     def save_to_db(self, db_connector):
-        # Calculate days_from_release before saving
-        self.calculate_days_from_release()
-
-        # Format release_date for the database
-        formatted_release_date = self.format_release_date_for_db()
-
+        # Save the song to the database
         cursor = db_connector.connection.cursor()
-
         song_query = """
             INSERT INTO songs (
                 name, main_artist_id, album_id, producer, beatmaker, record_label, type,
@@ -73,11 +50,17 @@ class Song:
         """
         cursor.execute(song_query, (
             self.name, self.main_artist_id, self.album_id, self.producer, self.beatmaker, self.record_label,
-            self.type, formatted_release_date, self.days_from_release, self.spotify_id, self.youtube_id,
+            self.type, self.release_date, self.days_from_release, self.spotify_id, self.youtube_id,
             self.youtube_music_id, self.spotify_url, self.youtube_url, self.youtube_music_url
         ))
         song_id = cursor.lastrowid
 
+        # Add the song to the album_songs table if album_id is provided
+        if self.album_id:
+            album_songs = AlbumSongs(db_connector)
+            album_songs.add_song_to_album(self.album_id, song_id)
+
+        # Add featured artists to the song_artists table
         if self.featured_artists:
             song_artist_query = "INSERT INTO song_artists (song_id, artist_id) VALUES (%s, %s)"
             for artist_id in self.featured_artists:
@@ -86,29 +69,31 @@ class Song:
         db_connector.connection.commit()
         print(f"Song '{self.name}' with ID {song_id} inserted successfully")
 
-    def update_in_db(self, db_connector, song_id):
-        # Calculate days_from_release before updating
-        self.calculate_days_from_release()
+    @classmethod
+    def get_by_id(cls, db_connector, song_id):
+        cursor = db_connector.connection.cursor(dictionary=True)
+        query = "SELECT * FROM songs WHERE id = %s"
+        cursor.execute(query, (song_id,))
+        song_data = cursor.fetchone()
 
-        # Format release_date for the database
-        formatted_release_date = self.format_release_date_for_db()
-
-        cursor = db_connector.connection.cursor()
-
-        song_query = """
-            UPDATE songs SET
-                name = %s, main_artist_id = %s, album_id = %s, producer = %s, beatmaker = %s,
-                record_label = %s, type = %s, release_date = %s, days_from_release = %s,
-                spotify_id = %s, youtube_id = %s, youtube_music_id = %s,
-                spotify_url = %s, youtube_url = %s, youtube_music_url = %s
-            WHERE song_id = %s
-        """
-        cursor.execute(song_query, (
-            self.name, self.main_artist_id, self.album_id, self.producer, self.beatmaker, self.record_label,
-            self.type, formatted_release_date, self.days_from_release, self.spotify_id, self.youtube_id,
-            self.youtube_music_id, self.spotify_url, self.youtube_url, self.youtube_music_url, song_id
-        ))
-
-        # Optionally update featured artists if necessary
-        db_connector.connection.commit()
-        print(f"Song with ID {song_id} updated successfully")
+        if song_data:
+            return cls(
+                name=song_data["name"],
+                main_artist_id=song_data["main_artist_id"],
+                album_id=song_data["album_id"],
+                producer=song_data["producer"],
+                beatmaker=song_data["beatmaker"],
+                record_label=song_data["record_label"],
+                type=song_data["type"],
+                release_date=song_data["release_date"],
+                days_from_release=song_data["days_from_release"],
+                spotify_id=song_data["spotify_id"],
+                youtube_id=song_data["youtube_id"],
+                youtube_music_id=song_data["youtube_music_id"],
+                spotify_url=song_data["spotify_url"],
+                youtube_url=song_data["youtube_url"],
+                youtube_music_url=song_data["youtube_music_url"],
+                featured_artists=[]  # Fetch artists separately if needed
+            )
+        else:
+            return None
