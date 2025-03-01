@@ -123,6 +123,7 @@ def main():
             )
             updated_artist.update_in_db(db, artist_id)
 
+
         elif choice == '3':  # Delete Artist
             artist_id = input("Enter Artist ID to delete: ")
             Artist.delete_from_db(db, artist_id)

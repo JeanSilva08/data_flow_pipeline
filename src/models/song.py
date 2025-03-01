@@ -39,7 +39,6 @@ class Song:
         self.featured_artists = featured_artists or []
 
     def save_to_db(self, db_connector):
-        # Save the song to the database
         cursor = db_connector.connection.cursor()
         song_query = """
             INSERT INTO songs (
@@ -54,20 +53,30 @@ class Song:
             self.youtube_music_id, self.spotify_url, self.youtube_url, self.youtube_music_url
         ))
         song_id = cursor.lastrowid
-
-        # Add the song to the album_songs table if album_id is provided
         if self.album_id:
             album_songs = AlbumSongs(db_connector)
             album_songs.add_song_to_album(self.album_id, song_id)
-
-        # Add featured artists to the song_artists table
         if self.featured_artists:
             song_artist_query = "INSERT INTO song_artists (song_id, artist_id) VALUES (%s, %s)"
             for artist_id in self.featured_artists:
                 cursor.execute(song_artist_query, (song_id, artist_id))
-
         db_connector.connection.commit()
         print(f"Song '{self.name}' with ID {song_id} inserted successfully")
+
+    @staticmethod
+    def delete_from_db(db_connector, song_id):
+        """
+        Deletes a song from the database.
+        """
+        cursor = db_connector.connection.cursor()
+        delete_album_songs_query = "DELETE FROM album_songs WHERE song_id = %s"
+        cursor.execute(delete_album_songs_query, (song_id,))
+        delete_song_artists_query = "DELETE FROM song_artists WHERE song_id = %s"
+        cursor.execute(delete_song_artists_query, (song_id,))
+        delete_song_query = "DELETE FROM songs WHERE song_id = %s"
+        cursor.execute(delete_song_query, (song_id,))
+        db_connector.connection.commit()
+        print(f"Song with ID {song_id} deleted successfully")
 
     @classmethod
     def get_by_id(cls, db_connector, song_id):

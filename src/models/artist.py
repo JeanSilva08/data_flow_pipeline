@@ -73,8 +73,14 @@ class Artist:
     @staticmethod
     def delete_from_db(db_connector, artist_id):
         cursor = db_connector.connection.cursor()
-        query = "DELETE FROM artists WHERE artist_id = %s"
-        cursor.execute(query, (artist_id,))
+        check_songs_query = "SELECT COUNT(*) FROM songs WHERE main_artist_id = %s"
+        cursor.execute(check_songs_query, (artist_id,))
+        song_count = cursor.fetchone()[0]
+        if song_count > 0:
+            print(f"Cannot delete artist with ID {artist_id} because {song_count} songs are associated with them.")
+            return
+        delete_artist_query = "DELETE FROM artists WHERE artist_id = %s"
+        cursor.execute(delete_artist_query, (artist_id,))
         db_connector.connection.commit()
         print(f"Artist with ID {artist_id} deleted successfully")
 
