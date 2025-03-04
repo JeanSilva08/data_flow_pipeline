@@ -1,4 +1,6 @@
+from src.database import db_connector
 from src.models.album_songs import AlbumSongs
+from src.models.song import Song
 
 
 class Album:
@@ -41,6 +43,17 @@ class Album:
         db_connector.connection.commit()
         self.album_id = cursor.lastrowid
         print(f"Album {self.name} saved to DB with ID {self.album_id}")
+
+    @property
+    def songs(self):
+        """
+        Returns a list of Song objects associated with this album.
+        """
+        if not self.album_id:
+            return []  # Return an empty list if the album is not saved to the database
+        album_songs = AlbumSongs(db_connector)
+        songs_data = album_songs.get_songs_by_album(self.album_id)
+        return [Song(**song_data) for song_data in songs_data]  # Create Song objects
 
     def get_songs(self, db_connector):
         """

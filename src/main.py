@@ -15,6 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 load_dotenv()
 
+
 def main():
     # Initialize the database connection
     db = DBConnector(
@@ -123,7 +124,6 @@ def main():
             )
             updated_artist.update_in_db(db, artist_id)
 
-
         elif choice == '3':  # Delete Artist
             artist_id = input("Enter Artist ID to delete: ")
             Artist.delete_from_db(db, artist_id)
@@ -132,34 +132,31 @@ def main():
             song_name = input("Song Name: ")
             main_artist_id = input("Main Artist ID: ")
             producer = input("Producer: ")
-            beatmaker = input("Beatmaker: ")
+            ytmsc_id = input("YouTube Music ID (optional): ")
             record_label = input("Record Label: ")
             type = input("Type (e.g., Single, Album): ")
             release_date = input("Release Date (DD-MM-YYYY): ")
             spotify_id = input("Spotify ID (optional): ")
             youtube_id = input("YouTube ID (optional): ")
-            youtube_music_id = input("YouTube Music ID (optional): ")
             spotify_url = input("Spotify URL (optional): ")
             youtube_url = input("YouTube URL (optional): ")
             youtube_music_url = input("YouTube Music URL (optional): ")
             album_id = input("Album ID (optional): ")
-
             featured_artists_input = input(
                 "Enter featured artist IDs (comma-separated, or leave blank if none): "
             )
-            featured_artists = [int(x.strip()) for x in featured_artists_input.split(',')] if featured_artists_input else []
-
+            featured_artists = [int(x.strip()) for x in
+                                featured_artists_input.split(',')] if featured_artists_input else []
             new_song = Song(
                 name=song_name,
                 main_artist_id=main_artist_id,
                 producer=producer,
-                beatmaker=beatmaker,
+                ytmsc_id=ytmsc_id,
                 record_label=record_label,
                 type=type,
                 release_date=release_date,
                 spotify_id=spotify_id or None,
                 youtube_id=youtube_id or None,
-                youtube_music_id=youtube_music_id or None,
                 spotify_url=spotify_url or None,
                 youtube_url=youtube_url or None,
                 youtube_music_url=youtube_music_url or None,
@@ -170,37 +167,59 @@ def main():
 
         elif choice == '5':  # Edit Song
             song_id = input("Enter Song ID to update: ")
-            song_name = input("Song Name: ")
-            main_artist_id = input("Main Artist ID: ")
-            producer = input("Producer: ")
-            beatmaker = input("Beatmaker: ")
-            record_label = input("Record Label: ")
-            type = input("Type (e.g., Single, Album): ")
-            release_date = input("Release Date (DD-MM-YYYY): ")
-            spotify_id = input("Spotify ID (optional): ")
-            youtube_id = input("YouTube ID (optional): ")
-            youtube_music_id = input("YouTube Music ID (optional): ")
-            spotify_url = input("Spotify URL (optional): ")
-            youtube_url = input("YouTube URL (optional): ")
-            youtube_music_url = input("YouTube Music URL (optional): ")
-            album_id = input("Album ID (optional): ")
+            existing_song = Song.get_by_id(db, song_id)
+            if not existing_song:
+                print(f"Song with ID {song_id} not found.")
+                continue
+
+            # Prompt for updated values
+            song_name = input(f"Song Name [{existing_song.name}]: ") or existing_song.name
+            main_artist_id = input(f"Main Artist ID [{existing_song.main_artist_id}]: ") or existing_song.main_artist_id
+            spotify_id = input(f"Spotify ID [{existing_song.spotify_id}]: ") or existing_song.spotify_id
+            youtube_id = input(f"YouTube ID [{existing_song.youtube_id}]: ") or existing_song.youtube_id
+            ytmsc_id = input(f"YouTube Music ID [{existing_song.ytmsc_id}]: ") or existing_song.ytmsc_id
+            producer = input(f"Producer [{existing_song.producer}]: ") or existing_song.producer
+            record_label = input(f"Record Label [{existing_song.record_label}]: ") or existing_song.record_label
+            type = input(f"Type (e.g., Single, Album) [{existing_song.type}]: ") or existing_song.type
+            release_date = input(
+                f"Release Date (DD-MM-YYYY) [{existing_song.release_date}]: ") or existing_song.release_date
+            days_from_release = input(
+                f"Days from Release [{existing_song.days_from_release}]: ") or existing_song.days_from_release
+            spotify_url = input(f"Spotify URL [{existing_song.spotify_url}]: ") or existing_song.spotify_url
+            youtube_url = input(f"YouTube URL [{existing_song.youtube_url}]: ") or existing_song.youtube_url
+            youtube_music_url = input(
+                f"YouTube Music URL [{existing_song.youtube_music_url}]: ") or existing_song.youtube_music_url
+            album_id = input(f"Album ID [{existing_song.album_id}]: ") or existing_song.album_id
+            featured_artists_input = input(
+                f"Enter featured artist IDs (comma-separated, or leave blank to keep current [{existing_song.featured_artists}]): "
+
+            )
+            featured_artists = [int(x.strip()) for x in featured_artists_input.split(
+                ',')] if featured_artists_input else existing_song.featured_artists
+
+            # Create updated song object
 
             updated_song = Song(
                 name=song_name,
                 main_artist_id=main_artist_id,
                 producer=producer,
-                beatmaker=beatmaker,
+                ytmsc_id=ytmsc_id,
                 record_label=record_label,
                 type=type,
                 release_date=release_date,
-                spotify_id=spotify_id or None,
-                youtube_id=youtube_id or None,
-                youtube_music_id=youtube_music_id or None,
-                spotify_url=spotify_url or None,
-                youtube_url=youtube_url or None,
-                youtube_music_url=youtube_music_url or None,
-                album_id=album_id or None
+                days_from_release=days_from_release,
+                spotify_id=spotify_id,
+                youtube_id=youtube_id,
+                spotify_url=spotify_url,
+                youtube_url=youtube_url,
+                youtube_music_url=youtube_music_url,
+                album_id=album_id,
+                featured_artists=featured_artists
+
             )
+
+            # Update the song in the database
+
             updated_song.update_in_db(db, song_id)
 
         elif choice == '6':  # Delete Song
@@ -304,7 +323,8 @@ def main():
                         fetch_and_store_artist_data(db, artist.spotify_id)
                         print(f"Data for artist {artist.name} (Spotify ID: {artist.spotify_id}) saved successfully.")
                     except Exception as e:
-                        print(f"Error fetching and storing data for artist {artist.name} (Spotify ID: {artist.spotify_id}): {e}")
+                        print(
+                            f"Error fetching and storing data for artist {artist.name} (Spotify ID: {artist.spotify_id}): {e}")
                 else:
                     print(f"Artist {artist.name} does not have a Spotify ID. Skipping...")
 
@@ -346,6 +366,7 @@ def main():
 
     # Close the database connection
     db.close()
+
 
 if __name__ == "__main__":
     main()

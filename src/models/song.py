@@ -1,116 +1,133 @@
-from src.models.album_songs import AlbumSongs
-
+import json
 
 class Song:
     def __init__(
         self,
         name,
         main_artist_id,
-        album_id=None,
         producer=None,
-        beatmaker=None,
+        ytmsc_id=None,
         record_label=None,
         type=None,
         release_date=None,
         days_from_release=None,
         spotify_id=None,
         youtube_id=None,
-        youtube_music_id=None,
         spotify_url=None,
         youtube_url=None,
         youtube_music_url=None,
+        album_id=None,
         featured_artists=None
     ):
         self.name = name
         self.main_artist_id = main_artist_id
-        self.album_id = album_id
         self.producer = producer
-        self.beatmaker = beatmaker
+        self.ytmsc_id = ytmsc_id
         self.record_label = record_label
         self.type = type
         self.release_date = release_date
         self.days_from_release = days_from_release
         self.spotify_id = spotify_id
         self.youtube_id = youtube_id
-        self.youtube_music_id = youtube_music_id
         self.spotify_url = spotify_url
         self.youtube_url = youtube_url
         self.youtube_music_url = youtube_music_url
-        self.featured_artists = featured_artists or []
+        self.album_id = album_id
+        self.featured_artists = featured_artists or []  # List of artist IDs or names
 
     def save_to_db(self, db_connector):
         cursor = db_connector.connection.cursor()
-        song_query = """
+        query = """
             INSERT INTO songs (
-                name, main_artist_id, album_id, producer, beatmaker, record_label, type,
+                name, main_artist_id, producer, ytmsc_id, record_label, type,
                 release_date, days_from_release, spotify_id, youtube_id,
-                youtube_music_id, spotify_url, youtube_url, youtube_music_url
+                spotify_url, youtube_url, youtube_music_url, album_id, featured_artists
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(song_query, (
-            self.name, self.main_artist_id, self.album_id, self.producer, self.beatmaker, self.record_label,
-            self.type, self.release_date, self.days_from_release, self.spotify_id, self.youtube_id,
-            self.youtube_music_id, self.spotify_url, self.youtube_url, self.youtube_music_url
+        cursor.execute(query, (
+            self.name, self.main_artist_id, self.producer, self.ytmsc_id,
+            self.record_label, self.type, self.release_date, self.days_from_release,
+            self.spotify_id, self.youtube_id, self.spotify_url,
+            self.youtube_url, self.youtube_music_url, self.album_id,
+            json.dumps(self.featured_artists)  # Convert list to JSON
         ))
-        song_id = cursor.lastrowid
-        if self.album_id:
-            album_songs = AlbumSongs(db_connector)
-            album_songs.add_song_to_album(self.album_id, song_id)
-        if self.featured_artists:
-            song_artist_query = "INSERT INTO song_artists (song_id, artist_id) VALUES (%s, %s)"
-            for artist_id in self.featured_artists:
-                cursor.execute(song_artist_query, (song_id, artist_id))
         db_connector.connection.commit()
-        print(f"Song '{self.name}' with ID {song_id} inserted successfully")
+        print(f"Song {self.name} inserted successfully")
 
-    @staticmethod
-    def delete_from_db(db_connector, song_id):
-        """
-        Deletes a song from the database.
-        """
+    def update_in_db(self, db_connector, song_id):
         cursor = db_connector.connection.cursor()
-        delete_album_songs_query = "DELETE FROM album_songs WHERE song_id = %s"
-        cursor.execute(delete_album_songs_query, (song_id,))
-        delete_song_artists_query = "DELETE FROM song_artists WHERE song_id = %s"
-        cursor.execute(delete_song_artists_query, (song_id,))
-        delete_song_query = "DELETE FROM songs WHERE song_id = %s"
-        cursor.execute(delete_song_query, (song_id,))
+        query = """
+            UPDATE songs SET
+                name = %s, main_artist_id = %s, producer = %s, ytmsc_id = %s,
+                record_label = %s, type = %s, release_date = %s, days_from_release = %s,
+                spotify_id = %s, youtube_id = %s, spotify_url = %s,
+                youtube_url = %s, youtube_music_url = %s, album_id = %s,
+                featured_artists = %s
+            WHERE song_id = %s
+        """
+        cursor.execute(query, (
+            self.name, self.main_artist_id, self.producer, self.ytmsc_id,
+            self.record_label, self.type, self.release_date, self.days_from_release,
+            self.spotify_id, self.youtube_id, self.spotify_url,
+            self.youtube_url, self.youtube_music_url, self.album_id,
+            json.dumps(self.featured_artists),  # Convert list to JSON
+            song_id
+        ))
         db_connector.connection.commit()
-        print(f"Song with ID {song_id} deleted successfully")
+        print(f"Song with ID {song_id} updated successfully.")
 
     @classmethod
-    def get_by_id(cls, db_connector, song_id):
-        cursor = db_connector.connection.cursor(dictionary=True)
-        query = "SELECT * FROM songs WHERE song_id = %s"  # Use the correct column name
+    @classmethod
+    def get_by_id(cls, db, song_id):
+        cursor = db.connection.cursor()
+        query = "SELECT * FROM songs WHERE song_id = %s"
         cursor.execute(query, (song_id,))
-        song_data = cursor.fetchone()
-
-        if song_data:
+        result = cursor.fetchone()
+        if result:
             return cls(
-                name=song_data["name"],
-                main_artist_id=song_data["main_artist_id"],
-                album_id=song_data["album_id"],
-                producer=song_data["producer"],
-                beatmaker=song_data["beatmaker"],
-                record_label=song_data["record_label"],
-                type=song_data["type"],
-                release_date=song_data["release_date"],
-                days_from_release=song_data["days_from_release"],
-                spotify_id=song_data["spotify_id"],
-                youtube_id=song_data["youtube_id"],
-                youtube_music_id=song_data["youtube_music_id"],
-                spotify_url=song_data["spotify_url"],
-                youtube_url=song_data["youtube_url"],
-                youtube_music_url=song_data["youtube_music_url"],
-                featured_artists=[]  # Fetch artists separately if needed
+                name=result[1],
+                main_artist_id=result[2],
+                producer=result[6],
+                ytmsc_id=result[5],
+                record_label=result[7],
+                type=result[8],
+                release_date=result[9],
+                days_from_release=result[10],
+                spotify_id=result[3],
+                youtube_id=result[4],
+                spotify_url=result[11],
+                youtube_url=result[12],
+                youtube_music_url=result[13],
+                album_id=result[14],
+                featured_artists=json.loads(result[15]) if result[15] else []  # Convert JSON to list
             )
-        else:
-            return None
+        return None
 
-    def remove_from_album(self, db_connector, song_id):
-        """
-        Removes a song from an album using the AlbumSongs class.
-        """
-        album_songs = AlbumSongs(db_connector)
-        album_songs.remove_song_from_album(self.album_id, song_id)
-        print(f"Song {song_id} removed from album {self.album_id}")
+    @classmethod
+    def get_all(cls, db):
+        cursor = db.connection.cursor()
+        query = "SELECT * FROM songs"
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        songs = []
+        for result in results:
+            song = cls(
+                name=result[1],
+                main_artist_id=result[2],
+                producer=result[6],
+                ytmsc_id=result[5],
+                record_label=result[7],
+                type=result[8],
+                release_date=result[9],
+                spotify_id=result[3],
+                youtube_id=result[4],
+                spotify_url=result[11],
+                youtube_url=result[12],
+                youtube_music_url=result[13],
+                album_id=result[14],
+                featured_artists=json.loads(result[15]) if result[15] else []  # Convert JSON to list
+            )
+            songs.append(song)
+
+        return songs

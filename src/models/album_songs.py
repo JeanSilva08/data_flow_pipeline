@@ -16,7 +16,7 @@ class AlbumSongs:
         """
         Retrieves all songs associated with a specific album.
         """
-        cursor = self.db_connector.connection.cursor()
+        cursor = self.db_connector.connection.cursor(dictionary=True)
         query = """
             SELECT songs.* FROM songs
             JOIN album_songs ON songs.song_id = album_songs.song_id
