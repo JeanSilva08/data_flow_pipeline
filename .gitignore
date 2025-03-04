@@ -1,18 +1,56 @@
 # Ignore Python cache and compiled files
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+*.py,cover
+
+# Ignore virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Ignore SQLite database
 *.sqlite3
+*.db
+*.sql
 
-# Ignore API'S credentials
+# Ignore API credentials and sensitive files
 oauth.json
-
-# Ignore environment variables file
 .env
+secrets/
 
-init.sql
-
+# Ignore Docker-related files
 docker-compose.yml
-
 Dockerfile
+docker-compose.*.yml
+
+# Ignore logs and local development files
+logs/
+*.log
+*.tmp
+*.bak
+
+# Ignore data directories
+data/
+*.csv
+*.json
+*.xlsx
+
+# Ignore build and distribution directories
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db

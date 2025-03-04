@@ -12,10 +12,13 @@ services:
       - DB_NAME=mainstreet_data_pipeline
       - DB_USER=root
       - DB_PASSWORD=rootpassword
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}  # Load from .env
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}  # Load from .env
     volumes:
       - .:/app
     networks:
       - data_network
+    restart: unless-stopped  # Automatically restart on failure
 
   db:
     image: mysql:8.0
@@ -24,22 +27,23 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: mainstreet_data_pipeline
     ports:
-      - "3307:3306"
+      - "3307:3306"  # Expose MySQL on port 3307
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql  # Persist MySQL data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Initialize DB schema
     networks:
       - data_network
-    healthcheck:  # <== Added this
+    healthcheck:  # Ensure DB is ready before app starts
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       retries: 5
       start_period: 10s
       timeout: 5s
+    restart: unless-stopped  # Automatically restart on failure
 
 volumes:
-  mysql_data:
+  mysql_data:  # Persistent volume for MySQL data
 
 networks:
   data_network:
-    driver: bridge
+    driver: bridge  # Internal network for app and DB
