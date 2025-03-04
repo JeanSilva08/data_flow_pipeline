@@ -114,7 +114,8 @@ class ETLSystem:
         Add a new artist to the database.
         """
         artist_data = self._get_artist_input()
-        Artist.save_to_db(self.db, **artist_data)
+        artist = Artist(**artist_data)  # Create an Artist instance with the collected data
+        artist.save_to_db(self.db)  # Save the artist to the database
         print("Artist added successfully!")
 
     def _edit_artist(self):
