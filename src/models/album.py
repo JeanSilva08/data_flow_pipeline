@@ -1,35 +1,17 @@
-from src.database import db_connector
-from src.models.album_songs import AlbumSongs
-from src.models.song import Song
-
-
 class Album:
-    def __init__(
-        self,
-        name,
-        artist_id,
-        number_related_on_release_position=None,
-        spotify_album_id=None,
-        spotify_url=None,
-        youtube_id=None,
-        youtube_url=None,
-        youtube_music_id=None,
-        youtube_music_url=None
-    ):
-        self.name = name
-        self.artist_id = artist_id
-        self.number_related_on_release_position = number_related_on_release_position
-        self.spotify_album_id = spotify_album_id
-        self.spotify_url = spotify_url
-        self.youtube_id = youtube_id
-        self.youtube_url = youtube_url
-        self.youtube_music_id = youtube_music_id
-        self.youtube_music_url = youtube_music_url
-        self.album_id = None  # Default to None until set later
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name")
+        self.artist_id = kwargs.get("artist_id")
+        self.number_related_on_release_position = kwargs.get("number_related_on_release_position")
+        self.spotify_album_id = kwargs.get("spotify_album_id")
+        self.spotify_url = kwargs.get("spotify_url")
+        self.youtube_id = kwargs.get("youtube_id")
+        self.youtube_url = kwargs.get("youtube_url")
+        self.youtube_music_id = kwargs.get("youtube_music_id")
+        self.youtube_music_url = kwargs.get("youtube_music_url")
 
-    def save_to_db(self, db_connector):
-        # Save the album to the database
-        cursor = db_connector.connection.cursor()
+    def save_to_db(self, db):
+        cursor = db.connection.cursor()
         query = """
             INSERT INTO albums (
                 name, artist_id, spotify_id, number_related_on_release_position,
@@ -40,24 +22,42 @@ class Album:
             self.name, self.artist_id, self.spotify_album_id, self.number_related_on_release_position,
             self.spotify_url, self.youtube_id, self.youtube_url, self.youtube_music_id, self.youtube_music_url
         ))
-        db_connector.connection.commit()
-        self.album_id = cursor.lastrowid
-        print(f"Album {self.name} saved to DB with ID {self.album_id}")
+        db.connection.commit()
 
-    @property
-    def songs(self):
+    def update_in_db(self, db, album_id):
+        cursor = db.connection.cursor()
+        query = """
+            UPDATE albums SET
+                name = %s, artist_id = %s, spotify_id = %s, number_related_on_release_position = %s,
+                spotify_url = %s, youtube_id = %s, youtube_url = %s, youtube_music_id = %s, youtube_music_url = %s
+            WHERE album_id = %s
         """
-        Returns a list of Song objects associated with this album.
-        """
-        if not self.album_id:
-            return []  # Return an empty list if the album is not saved to the database
-        album_songs = AlbumSongs(db_connector)
-        songs_data = album_songs.get_songs_by_album(self.album_id)
-        return [Song(**song_data) for song_data in songs_data]  # Create Song objects
+        cursor.execute(query, (
+            self.name, self.artist_id, self.spotify_album_id, self.number_related_on_release_position,
+            self.spotify_url, self.youtube_id, self.youtube_url, self.youtube_music_id, self.youtube_music_url, album_id
+        ))
+        db.connection.commit()
 
-    def get_songs(self, db_connector):
-        """
-        Retrieves all songs associated with this album.
-        """
-        album_songs = AlbumSongs(db_connector)
-        return album_songs.get_songs_by_album(self.album_id)
+    @staticmethod
+    def delete_from_db(db, album_id):
+        cursor = db.connection.cursor()
+        query = "DELETE FROM albums WHERE album_id = %s"
+        cursor.execute(query, (album_id,))
+        db.connection.commit()
+
+    @staticmethod
+    def get_by_id(db, album_id):
+        cursor = db.connection.cursor()
+        query = "SELECT * FROM albums WHERE album_id = %s"
+        cursor.execute(query, (album_id,))
+        result = cursor.fetchone()
+        if result:
+            return Album(**result)
+        return None
+
+    @staticmethod
+    def get_all(db):
+        cursor = db.connection.cursor()
+        query = "SELECT * FROM albums"
+        cursor.execute(query)
+        return [Album(**row) for row in cursor.fetchall()]
