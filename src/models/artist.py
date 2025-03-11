@@ -33,22 +33,15 @@ class Artist:
         ))
         db.connection.commit()
 
-    def update_in_db(self, db, artist_id):
-        cursor = db.connection.cursor()
-        query = """
-            UPDATE artists SET
-                name = %s, category = %s, r_label = %s, spotify_id = %s, youtube_id = %s,
-                Instagram_id = %s, TikTok_id = %s, Twitter_id = %s, Twitch_id = %s,
-                Spotify_url = %s, youtube_url = %s, instagram_url = %s, tiktok_url = %s,
-                twitter_url = %s, twitch_url = %s
-            WHERE artist_id = %s
+    @staticmethod
+    def update_in_db(db, artist_id, **kwargs):
         """
-        cursor.execute(query, (
-            self.name, self.category, self.r_label, self.spotify_id, self.youtube_id,
-            self.Instagram_id, self.TikTok_id, self.Twitter_id, self.Twitch_id,
-            self.Spotify_url, self.youtube_url, self.instagram_url, self.tiktok_url,
-            self.twitter_url, self.twitch_url, artist_id
-        ))
+        Update the artist data in the database.
+        """
+        cursor = db.connection.cursor()
+        set_clause = ', '.join([f"{key} = %s" for key in kwargs.keys()])
+        query = f"UPDATE artists SET {set_clause} WHERE artist_id = %s"
+        cursor.execute(query, (*kwargs.values(), artist_id))
         db.connection.commit()
 
     @staticmethod
@@ -60,7 +53,7 @@ class Artist:
 
     @staticmethod
     def get_by_id(db, artist_id):
-        cursor = db.connection.cursor()
+        cursor = db.connection.cursor(dictionary=True)
         query = "SELECT * FROM artists WHERE artist_id = %s"
         cursor.execute(query, (artist_id,))
         return cursor.fetchone()

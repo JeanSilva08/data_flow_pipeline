@@ -36,25 +36,15 @@ class Song:
         ))
         db.connection.commit()
 
-    def update_in_db(self, db, song_id):
-        cursor = db.connection.cursor()
-        query = """
-            UPDATE songs SET
-                name = %s, main_artist_id = %s, producer = %s, ytmsc_id = %s,
-                record_label = %s, type = %s, release_date = %s, days_from_release = %s,
-                spotify_id = %s, youtube_id = %s, spotify_url = %s,
-                youtube_url = %s, youtube_music_url = %s, album_id = %s,
-                featured_artists = %s
-            WHERE song_id = %s
+    @staticmethod
+    def update_in_db(db, song_id, **kwargs):
         """
-        cursor.execute(query, (
-            self.name, self.main_artist_id, self.producer, self.ytmsc_id,
-            self.record_label, self.type, self.release_date, self.days_from_release,
-            self.spotify_id, self.youtube_id, self.spotify_url,
-            self.youtube_url, self.youtube_music_url, self.album_id,
-            json.dumps(self.featured_artists),  # Convert list to JSON
-            song_id
-        ))
+        Update the song data in the database.
+        """
+        cursor = db.connection.cursor()
+        set_clause = ', '.join([f"{key} = %s" for key in kwargs.keys()])
+        query = f"UPDATE songs SET {set_clause} WHERE song_id = %s"
+        cursor.execute(query, (*kwargs.values(), song_id))
         db.connection.commit()
 
     @staticmethod
@@ -66,13 +56,13 @@ class Song:
 
     @staticmethod
     def get_by_id(db, song_id):
-        cursor = db.connection.cursor()
+        """
+        Fetch the current song data from the database.
+        """
+        cursor = db.connection.cursor(dictionary=True)
         query = "SELECT * FROM songs WHERE song_id = %s"
         cursor.execute(query, (song_id,))
-        result = cursor.fetchone()
-        if result:
-            return Song(**result)
-        return None
+        return cursor.fetchone()
 
     @staticmethod
     def get_all(db):

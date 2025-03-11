@@ -4,7 +4,7 @@ from src.models.song import Song
 from src.models.album import Album
 from src.models.playlist import Playlist
 from src.scapers.spotify_monthly_listeners import MonthlyListeners
-from src.apis.spotify_api import fetch_and_store_artist_data, fetch_and_store_songs_by_artist
+from src.apis.spotify_api import fetch_and_store_artist_data, fetch_and_store_songs_by_artist, SpotifyAPI
 from src.database.db_connector import DBConnector
 from dotenv import load_dotenv
 import os
@@ -28,12 +28,7 @@ class ETLSystem:
             password=os.getenv('DB_PASSWORD')
         )
         self.db.connect()
-
-    def close(self):
-        """
-        Close the database connection.
-        """
-        self.db.close()
+        self.spotify_api = SpotifyAPI()
 
     def display_menu(self):
         """
@@ -58,6 +53,7 @@ class ETLSystem:
         print("16: Sair")
         print("17: Adicionar música a um álbum")
         print("18: Remover música de um álbum")
+        print("19: Buscar todas as informações de um artista")
 
     def run(self):
         """
@@ -104,6 +100,8 @@ class ETLSystem:
                 self._add_song_to_album()
             elif choice == '18':
                 self._remove_song_from_album()
+            elif choice == '19':
+                self._fetch_all_artist_info()
             else:
                 print("Invalid choice. Please try again.")
 
@@ -122,9 +120,30 @@ class ETLSystem:
         """
         Edit an existing artist in the database.
         """
-        artist_id = input("Enter Artist ID to update: ")
-        artist_data = self._get_artist_input()
-        Artist.update_in_db(self.db, artist_id, **artist_data)
+        artist_id = input("Enter Artist ID to update: ").strip()
+
+        # Fetch current artist data
+        current_data = Artist.get_by_id(self.db, artist_id)
+        if not current_data:
+            print("Artist not found.")
+            return
+
+        # Display current data as placeholders
+        print("\nCurrent Artist Data:")
+        for key, value in current_data.items():
+            print(f"{key}: {value}")
+
+        # Get updated data from the user
+        print("\nEnter new data (leave blank to keep current value):")
+        updated_data = {}
+        for key, value in current_data.items():
+            if key == "artist_id":  # Skip the primary key
+                continue
+            new_value = input(f"{key} [{value}]: ").strip()
+            updated_data[key] = new_value if new_value else value
+
+        # Update the artist in the database
+        Artist.update_in_db(self.db, artist_id, **updated_data)
         print("Artist updated successfully!")
 
     def _delete_artist(self):
@@ -147,9 +166,30 @@ class ETLSystem:
         """
         Edit an existing song in the database.
         """
-        song_id = input("Enter Song ID to update: ")
-        song_data = self._get_song_input()
-        Song.update_in_db(self.db, song_id, **song_data)
+        song_id = input("Enter Song ID to update: ").strip()
+
+        # Fetch current song data
+        current_data = Song.get_by_id(self.db, song_id)
+        if not current_data:
+            print("Song not found.")
+            return
+
+        # Display current data as placeholders
+        print("\nCurrent Song Data:")
+        for key, value in current_data.items():
+            print(f"{key}: {value}")
+
+        # Get updated data from the user
+        print("\nEnter new data (leave blank to keep current value):")
+        updated_data = {}
+        for key, value in current_data.items():
+            if key == "song_id":  # Skip the primary key
+                continue
+            new_value = input(f"{key} [{value}]: ").strip()
+            updated_data[key] = new_value if new_value else value
+
+        # Update the song in the database
+        Song.update_in_db(self.db, song_id, **updated_data)
         print("Song updated successfully!")
 
     def _delete_song(self):
@@ -173,12 +213,30 @@ class ETLSystem:
         """
         Edit an existing playlist in the database.
         """
-        playlist_id = input("Enter Playlist ID to update: ")
-        playlist_name = input("Playlist Name: ")
-        spotify_playlist_id = input("Spotify Playlist ID (optional): ")
-        spotify_url = input("Spotify URL (optional): ")
-        song_ids = input("Enter updated song IDs for the playlist (comma-separated): ").strip().split(',')
-        Playlist.update_in_db(self.db, playlist_id, name=playlist_name, spotify_playlist_id=spotify_playlist_id, spotify_url=spotify_url, song_ids=song_ids)
+        playlist_id = input("Enter Playlist ID to update: ").strip()
+
+        # Fetch current playlist data
+        current_data = Playlist.get_by_id(self.db, playlist_id)
+        if not current_data:
+            print("Playlist not found.")
+            return
+
+        # Display current data as placeholders
+        print("\nCurrent Playlist Data:")
+        for key, value in current_data.items():
+            print(f"{key}: {value}")
+
+        # Get updated data from the user
+        print("\nEnter new data (leave blank to keep current value):")
+        updated_data = {}
+        for key, value in current_data.items():
+            if key == "playlist_id":  # Skip the primary key
+                continue
+            new_value = input(f"{key} [{value}]: ").strip()
+            updated_data[key] = new_value if new_value else value
+
+        # Update the playlist in the database
+        Playlist.update_in_db(self.db, playlist_id, **updated_data)
         print("Playlist updated successfully!")
 
     def _delete_playlist(self):
@@ -201,9 +259,30 @@ class ETLSystem:
         """
         Edit an existing album in the database.
         """
-        album_id = input("Enter Album ID to update: ")
-        album_data = self._get_album_input()
-        Album.update_in_db(self.db, album_id, **album_data)
+        album_id = input("Enter Album ID to update: ").strip()
+
+        # Fetch current album data
+        current_data = Album.get_by_id(self.db, album_id)
+        if not current_data:
+            print("Album not found.")
+            return
+
+        # Display current data as placeholders
+        print("\nCurrent Album Data:")
+        for key, value in current_data.items():
+            print(f"{key}: {value}")
+
+        # Get updated data from the user
+        print("\nEnter new data (leave blank to keep current value):")
+        updated_data = {}
+        for key, value in current_data.items():
+            if key == "album_id":  # Skip the primary key
+                continue
+            new_value = input(f"{key} [{value}]: ").strip()
+            updated_data[key] = new_value if new_value else value
+
+        # Update the album in the database
+        Album.update_in_db(self.db, album_id, **updated_data)
         print("Album updated successfully!")
 
     def _delete_album(self):
@@ -323,6 +402,18 @@ class ETLSystem:
             "youtube_music_id": input("YouTube Music ID (optional): ") or None,
             "youtube_music_url": input("YouTube Music URL (optional): ") or None,
         }
+
+    def _fetch_all_artist_info(self):
+        """
+        Fetch all information about an artist from Spotify.
+        """
+        artist_spotify_id = input("Enter the Artist Spotify ID: ").strip()
+        try:
+            artist_info = self.spotify_api.fetch_all_artist_info(artist_spotify_id)
+            print("Artist Information:")
+            print(artist_info)
+        except Exception as e:
+            print(f"Error fetching artist information: {e}")
 
 
 if __name__ == "__main__":

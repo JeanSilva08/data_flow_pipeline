@@ -1,12 +1,16 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from src.models.song import Song
+from src.models.artist import Artist
 from config.config import Config
-
+import time
 
 class SpotifyAPI:
     def __init__(self):
         self.token = self._get_access_token()
+        self.token_expiry = datetime.now() + timedelta(minutes=55)  # Tokens expire after 1 hour
+        self.cache = {}  # Simple cache to store API responses
+        self.rate_limit_reset = None  # Track rate limit reset time
 
     def _get_access_token(self):
         """
@@ -27,46 +31,104 @@ class SpotifyAPI:
 
         return response.json()['access_token']
 
+    def _check_token_expiry(self):
+        """
+        Check if the token is about to expire and refresh it if necessary.
+        """
+        if datetime.now() >= self.token_expiry:
+            self.token = self._get_access_token()
+            self.token_expiry = datetime.now() + timedelta(minutes=55)
+
+    def _make_request(self, url):
+        """
+        Make a request to the Spotify API with rate limiting and token management.
+        """
+        self._check_token_expiry()
+
+        if url in self.cache:
+            return self.cache[url]
+
+        headers = {'Authorization': f'Bearer {self.token}'}
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 429:  # Rate limit exceeded
+            reset_time = int(response.headers.get('Retry-After', 1))
+            print(f"Rate limit exceeded. Retrying after {reset_time} seconds.")
+            time.sleep(reset_time)
+            return self._make_request(url)
+
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch data: {response.status_code} {response.text}")
+
+        self.cache[url] = response.json()  # Cache the response
+        return response.json()
+
     def fetch_artist_data(self, artist_id):
         """
         Fetch artist details from Spotify.
         """
         url = f'https://api.spotify.com/v1/artists/{artist_id}'
-        headers = {'Authorization': f'Bearer {self.token}'}
-        response = requests.get(url, headers=headers)
+        artist_data = self._make_request(url)
 
-        if response.status_code != 200:
-            raise Exception(f"Failed to fetch artist data: {response.status_code} {response.text}")
-
-        artist_data = response.json()
         return {
             "artist_id": artist_id,
-            "song_count": len(artist_data.get('albums', {}).get('items', [])),
+            "name": artist_data['name'],
             "followers": artist_data['followers']['total'],
+            "genres": artist_data['genres'],
+            "popularity": artist_data['popularity'],
             "timestamp": datetime.now()
         }
 
-    def fetch_and_store_artist_data(self, db_connector, artist_id):
+    def fetch_all_artist_info(self, artist_id):
         """
-        Fetch artist data from Spotify and store it in the database.
+        Fetch all possible information about an artist, including albums and tracks.
         """
-        try:
-            artist_data = self.fetch_artist_data(artist_id)
-            self.store_artist_data(db_connector, artist_data['artist_id'], artist_data['song_count'], artist_data['followers'])
-            print(f"Data for artist {artist_id} saved successfully.")
-        except Exception as e:
-            print(f"Error fetching and storing data for artist {artist_id}: {e}")
+        artist_data = self.fetch_artist_data(artist_id)
+        albums = self.fetch_albums_by_artist(artist_id)
+        tracks = []
 
-    def store_artist_data(self, db_connector, artist_id, song_count, followers):
+        for album in albums:
+            album_id = album['id']
+            album_tracks = self.fetch_tracks_by_album(album_id)
+            tracks.extend(album_tracks)
+
+        return {
+            "artist": artist_data,
+            "albums": albums,
+            "tracks": tracks
+        }
+
+    def fetch_albums_by_artist(self, artist_id):
+        """
+        Fetch all albums for a given artist.
+        """
+        url = f'https://api.spotify.com/v1/artists/{artist_id}/albums'
+        return self._make_request(url)['items']
+
+    def fetch_tracks_by_album(self, album_id):
+        """
+        Fetch all tracks for a given album.
+        """
+        url = f'https://api.spotify.com/v1/albums/{album_id}/tracks'
+        return self._make_request(url)['items']
+
+    def store_artist_data(self, db_connector, artist_data):
         """
         Store artist data in the database.
         """
         cursor = db_connector.connection.cursor()
         query = """
-            INSERT INTO spotify_artist_data (artist_id, song_count, followers, timestamp)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO spotify_artist_data (artist_id, name, followers, genres, popularity, timestamp)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (artist_id, song_count, followers, datetime.now()))
+        cursor.execute(query, (
+            artist_data['artist_id'],
+            artist_data['name'],
+            artist_data['followers'],
+            artist_data['genres'],
+            artist_data['popularity'],
+            artist_data['timestamp']
+        ))
         db_connector.connection.commit()
 
     def fetch_and_store_songs_by_artist(self, db_connector, artist_spotify_id):
@@ -101,39 +163,19 @@ class SpotifyAPI:
         except Exception as e:
             print(f"Error fetching and adding songs: {e}")
 
-    def fetch_albums_by_artist(self, artist_spotify_id):
-        """
-        Fetch all albums for a given artist.
-        """
-        url = f'https://api.spotify.com/v1/artists/{artist_spotify_id}/albums'
-        headers = {'Authorization': f'Bearer {self.token}'}
-        response = requests.get(url, headers=headers)
-
-        if response.status_code != 200:
-            raise Exception(f"Failed to fetch albums for artist {artist_spotify_id}: {response.status_code} {response.text}")
-
-        return response.json()['items']
-
-    def fetch_tracks_by_album(self, album_id):
-        """
-        Fetch all tracks for a given album.
-        """
-        url = f'https://api.spotify.com/v1/albums/{album_id}/tracks'
-        headers = {'Authorization': f'Bearer {self.token}'}
-        response = requests.get(url, headers=headers)
-
-        if response.status_code != 200:
-            raise Exception(f"Failed to fetch tracks for album {album_id}: {response.status_code} {response.text}")
-
-        return response.json()['items']
-
 
 # Export functions for backward compatibility
 def fetch_and_store_artist_data(db_connector, artist_id):
+    """
+    Fetch and store artist data from Spotify.
+    """
     spotify_api = SpotifyAPI()
     spotify_api.fetch_and_store_artist_data(db_connector, artist_id)
 
 
 def fetch_and_store_songs_by_artist(db_connector, artist_spotify_id):
+    """
+    Fetch and store all songs for a given artist.
+    """
     spotify_api = SpotifyAPI()
     spotify_api.fetch_and_store_songs_by_artist(db_connector, artist_spotify_id)
