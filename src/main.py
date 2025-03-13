@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from src.models.album_songs import AlbumSongs
 from src.models.artist import Artist
 from src.models.song import Song
@@ -405,13 +407,29 @@ class ETLSystem:
 
     def _fetch_all_artist_info(self):
         """
-        Fetch all information about an artist from Spotify.
+        Fetch all information about an artist from Spotify and save it as a JSON file in the data/raw directory.
         """
         artist_spotify_id = input("Enter the Artist Spotify ID: ").strip()
         try:
+            # Fetch artist information
             artist_info = self.spotify_api.fetch_all_artist_info(artist_spotify_id)
-            print("Artist Information:")
-            print(artist_info)
+
+            # Generate the filename
+            artist_name = artist_info['artist']['name'].replace(" ", "_").lower()
+            current_date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            filename = f"artist_information_{artist_name}_{current_date}.json"
+
+            # Define the raw data directory path
+            raw_data_dir = os.path.join("data", "raw")
+
+            # Ensure the raw_data directory exists (though it should already exist)
+            os.makedirs(raw_data_dir, exist_ok=True)
+
+            # Save the JSON response to a file
+            file_path = os.path.join(raw_data_dir, filename)
+            with open(file_path, "w") as json_file:
+                json.dump(artist_info, json_file, indent=4, default=str)  # Use default=str to handle datetime
+            print(f"Artist information saved to {file_path}")
         except Exception as e:
             print(f"Error fetching artist information: {e}")
 

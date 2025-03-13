@@ -1,42 +1,43 @@
 import requests
 from datetime import datetime, timedelta
 from src.models.song import Song
-from src.models.artist import Artist
 from config.config import Config
 import time
 
+
+def _get_access_token():
+    """
+    Fetch and return the Spotify API access token.
+    """
+    client_id = Config.OAUTH_CONFIG['spotify']['client_id']
+    client_secret = Config.OAUTH_CONFIG['spotify']['client_secret']
+
+    auth_url = 'https://accounts.spotify.com/api/token'
+    response = requests.post(auth_url, data={
+        'grant_type': 'client_credentials',
+        'client_id': client_id,
+        'client_secret': client_secret
+    })
+
+    if response.status_code != 200:
+        raise Exception("Failed to authenticate with Spotify API")
+
+    return response.json()['access_token']
+
+
 class SpotifyAPI:
     def __init__(self):
-        self.token = self._get_access_token()
+        self.token = _get_access_token()
         self.token_expiry = datetime.now() + timedelta(minutes=55)  # Tokens expire after 1 hour
         self.cache = {}  # Simple cache to store API responses
         self.rate_limit_reset = None  # Track rate limit reset time
-
-    def _get_access_token(self):
-        """
-        Fetch and return the Spotify API access token.
-        """
-        client_id = Config.OAUTH_CONFIG['spotify']['client_id']
-        client_secret = Config.OAUTH_CONFIG['spotify']['client_secret']
-
-        auth_url = 'https://accounts.spotify.com/api/token'
-        response = requests.post(auth_url, data={
-            'grant_type': 'client_credentials',
-            'client_id': client_id,
-            'client_secret': client_secret
-        })
-
-        if response.status_code != 200:
-            raise Exception("Failed to authenticate with Spotify API")
-
-        return response.json()['access_token']
 
     def _check_token_expiry(self):
         """
         Check if the token is about to expire and refresh it if necessary.
         """
         if datetime.now() >= self.token_expiry:
-            self.token = self._get_access_token()
+            self.token = _get_access_token()
             self.token_expiry = datetime.now() + timedelta(minutes=55)
 
     def _make_request(self, url):
@@ -93,10 +94,18 @@ class SpotifyAPI:
             tracks.extend(album_tracks)
 
         return {
-            "artist": artist_data,
+            "artist": {
+                "artist_id": artist_data['artist_id'],
+                "name": artist_data['name'],
+                "followers": artist_data['followers'],
+                "genres": artist_data['genres'],
+                "popularity": artist_data['popularity'],
+                "timestamp": artist_data['timestamp'].isoformat()  # Convert datetime to string
+            },
             "albums": albums,
             "tracks": tracks
         }
+
 
     def fetch_albums_by_artist(self, artist_id):
         """
@@ -112,7 +121,8 @@ class SpotifyAPI:
         url = f'https://api.spotify.com/v1/albums/{album_id}/tracks'
         return self._make_request(url)['items']
 
-    def store_artist_data(self, db_connector, artist_data):
+    @staticmethod
+    def store_artist_data(db_connector, artist_data):
         """
         Store artist data in the database.
         """
@@ -162,6 +172,9 @@ class SpotifyAPI:
 
         except Exception as e:
             print(f"Error fetching and adding songs: {e}")
+
+    def fetch_and_store_artist_data(self, db_connector, artist_id):
+        pass
 
 
 # Export functions for backward compatibility
