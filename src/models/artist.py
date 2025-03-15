@@ -1,5 +1,6 @@
 class Artist:
     def __init__(self, **kwargs):
+        self.artist_id = kwargs.get("artist_id")  # Add this line
         self.name = kwargs.get("name")
         self.category = kwargs.get("category")
         self.r_label = kwargs.get("r_label")
@@ -56,7 +57,23 @@ class Artist:
         cursor = db.connection.cursor(dictionary=True)
         query = "SELECT * FROM artists WHERE artist_id = %s"
         cursor.execute(query, (artist_id,))
-        return cursor.fetchone()
+        result = cursor.fetchone()
+        if result:
+            return Artist(**result)  # Ensure the Artist instance is created with all fields
+        return None
+
+    @staticmethod
+    def get_by_spotify_id(db, spotify_id):
+        """
+        Fetch an artist by their Spotify ID.
+        """
+        cursor = db.connection.cursor(dictionary=True)
+        query = "SELECT * FROM artists WHERE spotify_id = %s"
+        cursor.execute(query, (spotify_id,))
+        result = cursor.fetchone()
+        if result:
+            return Artist(**result)  # Ensure the Artist instance is created with all fields
+        return None
 
     @staticmethod
     def get_all(db):

@@ -2,15 +2,10 @@ class AlbumSongs:
     def __init__(self, db):
         self.db = db
 
-    def add_song_to_album(self, album_id, song_id):
-        """
-        Adds a relationship between an album and a song.
-        """
-        cursor = self.db.connection.cursor()
+    @staticmethod
+    def add_song_to_album(db, album_id, song_id):
         query = "INSERT INTO album_songs (album_id, song_id) VALUES (%s, %s)"
-        cursor.execute(query, (album_id, song_id))
-        self.db.connection.commit()
-        print(f"Added song {song_id} to album {album_id}")
+        db.execute_query(query, (album_id, song_id))
 
     def get_songs_by_album(self, album_id):
         """
@@ -47,6 +42,14 @@ class AlbumSongs:
         cursor.execute(query, (album_id, song_id))
         self.db.connection.commit()
         print(f"Removed song {song_id} from album {album_id}")
+
+    @staticmethod
+    def check_song_in_album(db, album_id, song_id):
+        query = "SELECT * FROM album_songs WHERE album_id = %s AND song_id = %s"
+        result = db.execute_query(query, (album_id, song_id))
+        return bool(result)
+
+
 
     @staticmethod
     def get_all_album_song_relationships(db):

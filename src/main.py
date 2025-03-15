@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from src.models.album_songs import AlbumSongs
 from src.models.artist import Artist
+from src.models.artist_song import ArtistSongs
 from src.models.song import Song
 from src.models.album import Album
 from src.models.playlist import Playlist
@@ -56,6 +57,7 @@ class ETLSystem:
         print("17: Adicionar música a um álbum")
         print("18: Remover música de um álbum")
         print("19: Buscar todas as informações de um artista")
+        print("20: Alimentar banco de dados spotify")
 
     def run(self):
         """
@@ -104,6 +106,8 @@ class ETLSystem:
                 self._remove_song_from_album()
             elif choice == '19':
                 self._fetch_all_artist_info()
+            elif choice == '20':  # New option for populating database from JSON
+                self._populate_database_from_json()
             else:
                 print("Invalid choice. Please try again.")
 
@@ -432,6 +436,114 @@ class ETLSystem:
             print(f"Artist information saved to {file_path}")
         except Exception as e:
             print(f"Error fetching artist information: {e}")
+
+    def _populate_database_from_json(self):
+        """
+        Populate the database from JSON files in the data/raw directory.
+        If the artist already exists, it will still process their albums and songs.
+        """
+        raw_data_dir = os.path.join("data", "raw")
+        if not os.path.exists(raw_data_dir):
+            print(f"Directory {raw_data_dir} does not exist.")
+            return
+
+        # Loop through all JSON files in the raw directory
+        for filename in os.listdir(raw_data_dir):
+            if filename.endswith(".json"):
+                file_path = os.path.join(raw_data_dir, filename)
+                print(f"Processing file: {file_path}")
+
+                try:
+                    with open(file_path, "r") as json_file:
+                        artist_data = json.load(json_file)
+
+                    # Extract artist information
+                    artist_info = artist_data.get("artist", {})
+                    spotify_id = artist_info.get("artist_id")
+                    if not spotify_id:
+                        print(f"Skipping file {filename}: Missing artist Spotify ID.")
+                        continue
+
+                    # Check if the artist already exists
+                    existing_artist = Artist.get_by_spotify_id(self.db, spotify_id)
+                    if existing_artist:
+                        print(f"Artist {artist_info.get('name')} already exists. Processing albums and songs...")
+                        artist = existing_artist  # Use the existing artist instance
+                    else:
+                        # Insert the artist if they don't exist
+                        artist = Artist(
+                            name=artist_info.get("name"),
+                            spotify_id=spotify_id,
+                            category="",  # Default value
+                            r_label="",  # Default value
+                            # Add other fields as needed
+                        )
+                        artist.save_to_db(self.db)
+                        print(f"Inserted artist: {artist_info.get('name')}")
+
+                    # Process albums
+                    for album_info in artist_data.get("albums", []):
+                        album_spotify_id = album_info.get("id")
+                        if not album_spotify_id:
+                            print("Skipping album: Missing Spotify ID.")
+                            continue
+
+                        # Check if the album already exists
+                        existing_album = Album.get_by_spotify_id(self.db, album_spotify_id)
+                        if existing_album:
+                            print(f"Album {album_info.get('name')} already exists. Processing songs...")
+                            album = existing_album  # Use the existing album instance
+                        else:
+                            # Insert the album if it doesn't exist
+                            album = Album(
+                                name=album_info.get("name"),
+                                artist_id=artist.artist_id,  # Ensure artist_id is set
+                                spotify_album_id=album_spotify_id,
+                                spotify_url=album_info.get("external_urls", {}).get("spotify"),
+                                # Add other fields as needed
+                            )
+                            album.save_to_db(self.db)
+                            print(f"Inserted album: {album_info.get('name')}")
+
+                        # Process songs
+                        for song_info in album_info.get("tracks", []):
+                            song_spotify_id = song_info.get("id")
+                            if not song_spotify_id:
+                                print("Skipping song: Missing Spotify ID.")
+                                continue
+
+                            # Check if the song already exists
+                            existing_song = Song.get_by_spotify_id(self.db, song_spotify_id)
+                            if existing_song:
+                                print(f"Song {song_info.get('name')} already exists. Skipping.")
+                                song = existing_song  # Use the existing song instance
+                            else:
+                                # Insert the song if it doesn't exist
+                                song = Song(
+                                    name=song_info.get("name"),
+                                    main_artist_id=artist.artist_id,  # Ensure artist_id is set
+                                    spotify_id=song_spotify_id,
+                                    spotify_url=song_info.get("external_urls", {}).get("spotify"),
+                                    album_id=album.album_id,  # Ensure album_id is set
+                                    # Add other fields as needed
+                                )
+                                # Debug: Print song data before saving
+                                print(f"Inserting song: {song.name} (Spotify ID: {song.spotify_id})")
+                                song.save_to_db(self.db)
+                                print(f"Inserted song: {song_info.get('name')}")
+
+                            # Link song to album if not already linked
+                            if not AlbumSongs.check_song_in_album(self.db, album.album_id, song.song_id):
+                                AlbumSongs.add_song_to_album(self.db, album.album_id, song.song_id)
+                                print(f"Linked song {song.name} to album {album.name}")
+
+                            # Link song to artist if not already linked
+                            if not ArtistSongs.check_song_for_artist(self.db, artist.artist_id, song.song_id):
+                                ArtistSongs.add_song_for_artist(self.db, artist.artist_id, song.song_id)
+                                print(f"Linked song {song.name} to artist {artist.name}")
+
+                except Exception as e:
+                    print(f"Error processing file {filename}: {e}")
 
 
 if __name__ == "__main__":

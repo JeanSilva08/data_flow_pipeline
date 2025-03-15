@@ -2,15 +2,10 @@ class ArtistSongs:
     def __init__(self, db):
         self.db = db
 
-    def add_song_for_artist(self, artist_id, song_id):
-        """
-        Adds a relationship between an artist and a song.
-        """
-        cursor = self.db.connection.cursor()
-        query = "INSERT INTO song_artists (song_id, artist_id) VALUES (%s, %s)"
-        cursor.execute(query, (song_id, artist_id))
-        self.db.connection.commit()
-        print(f"Added artist {artist_id} to song {song_id}")
+    @staticmethod
+    def add_song_for_artist(db, artist_id, song_id):
+        query = "INSERT INTO artist_songs (artist_id, song_id) VALUES (%s, %s)"
+        db.execute_query(query, (artist_id, song_id))
 
     def get_songs_by_artist(self, artist_id):
         """
@@ -57,3 +52,9 @@ class ArtistSongs:
         query = "SELECT * FROM song_artists"
         cursor.execute(query)
         return cursor.fetchall()
+
+    @staticmethod
+    def check_song_for_artist(db, artist_id, song_id):
+        query = "SELECT * FROM artist_songs WHERE artist_id = %s AND song_id = %s"
+        result = db.execute_query(query, (artist_id, song_id))
+        return bool(result)
