@@ -12,6 +12,7 @@ from src.database.db_connector import DBConnector
 from dotenv import load_dotenv
 import os
 import sys
+import io
 
 # Add the project root to the system path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -33,7 +34,8 @@ class ETLSystem:
         self.db.connect()
         self.spotify_api = SpotifyAPI()
 
-    def display_menu(self):
+    @staticmethod
+    def display_menu():
         """
         Display the main menu options.
         """
@@ -129,24 +131,24 @@ class ETLSystem:
         artist_id = input("Enter Artist ID to update: ").strip()
 
         # Fetch current artist data
-        current_data = Artist.get_by_id(self.db, artist_id)
-        if not current_data:
+        current_artist = Artist.get_by_id(self.db, artist_id)
+        if not current_artist:
             print("Artist not found.")
             return
 
         # Display current data as placeholders
         print("\nCurrent Artist Data:")
-        for key, value in current_data.items():
-            print(f"{key}: {value}")
+        for key, value in current_artist.__dict__.items():
+            if not key.startswith('_'):  # Skip private attributes
+                print(f"{key}: {value}")
 
         # Get updated data from the user
         print("\nEnter new data (leave blank to keep current value):")
         updated_data = {}
-        for key, value in current_data.items():
-            if key == "artist_id":  # Skip the primary key
-                continue
-            new_value = input(f"{key} [{value}]: ").strip()
-            updated_data[key] = new_value if new_value else value
+        for key, value in current_artist.__dict__.items():
+            if not key.startswith('_') and key != "artist_id":  # Skip private attributes and primary key
+                new_value = input(f"{key} [{value}]: ").strip()
+                updated_data[key] = new_value if new_value else value
 
         # Update the artist in the database
         Artist.update_in_db(self.db, artist_id, **updated_data)
@@ -175,24 +177,24 @@ class ETLSystem:
         song_id = input("Enter Song ID to update: ").strip()
 
         # Fetch current song data
-        current_data = Song.get_by_id(self.db, song_id)
-        if not current_data:
+        current_song = Song.get_by_id(self.db, song_id)
+        if not current_song:
             print("Song not found.")
             return
 
         # Display current data as placeholders
         print("\nCurrent Song Data:")
-        for key, value in current_data.items():
-            print(f"{key}: {value}")
+        for key, value in current_song.__dict__.items():
+            if not key.startswith('_'):  # Skip private attributes
+                print(f"{key}: {value}")
 
         # Get updated data from the user
         print("\nEnter new data (leave blank to keep current value):")
         updated_data = {}
-        for key, value in current_data.items():
-            if key == "song_id":  # Skip the primary key
-                continue
-            new_value = input(f"{key} [{value}]: ").strip()
-            updated_data[key] = new_value if new_value else value
+        for key, value in current_song.__dict__.items():
+            if not key.startswith('_') and key != "song_id":  # Skip private attributes and primary key
+                new_value = input(f"{key} [{value}]: ").strip()
+                updated_data[key] = new_value if new_value else value
 
         # Update the song in the database
         Song.update_in_db(self.db, song_id, **updated_data)
@@ -222,24 +224,24 @@ class ETLSystem:
         playlist_id = input("Enter Playlist ID to update: ").strip()
 
         # Fetch current playlist data
-        current_data = Playlist.get_by_id(self.db, playlist_id)
-        if not current_data:
+        current_playlist = Playlist.get_by_id(self.db, playlist_id)
+        if not current_playlist:
             print("Playlist not found.")
             return
 
         # Display current data as placeholders
         print("\nCurrent Playlist Data:")
-        for key, value in current_data.items():
-            print(f"{key}: {value}")
+        for key, value in current_playlist.__dict__.items():
+            if not key.startswith('_'):  # Skip private attributes
+                print(f"{key}: {value}")
 
         # Get updated data from the user
         print("\nEnter new data (leave blank to keep current value):")
         updated_data = {}
-        for key, value in current_data.items():
-            if key == "playlist_id":  # Skip the primary key
-                continue
-            new_value = input(f"{key} [{value}]: ").strip()
-            updated_data[key] = new_value if new_value else value
+        for key, value in current_playlist.__dict__.items():
+            if not key.startswith('_') and key != "playlist_id":  # Skip private attributes and primary key
+                new_value = input(f"{key} [{value}]: ").strip()
+                updated_data[key] = new_value if new_value else value
 
         # Update the playlist in the database
         Playlist.update_in_db(self.db, playlist_id, **updated_data)
@@ -258,7 +260,8 @@ class ETLSystem:
         Add a new album to the database.
         """
         album_data = self._get_album_input()
-        Album.save_to_db(self.db, **album_data)
+        album = Album(**album_data)  # Create an Album instance with the collected data
+        album.save_to_db(self.db)  # Save the album to the database
         print("Album added successfully!")
 
     def _edit_album(self):
@@ -268,24 +271,24 @@ class ETLSystem:
         album_id = input("Enter Album ID to update: ").strip()
 
         # Fetch current album data
-        current_data = Album.get_by_id(self.db, album_id)
-        if not current_data:
+        current_album = Album.get_by_id(self.db, album_id)
+        if not current_album:
             print("Album not found.")
             return
 
         # Display current data as placeholders
         print("\nCurrent Album Data:")
-        for key, value in current_data.items():
-            print(f"{key}: {value}")
+        for key, value in current_album.__dict__.items():
+            if not key.startswith('_'):  # Skip private attributes
+                print(f"{key}: {value}")
 
         # Get updated data from the user
         print("\nEnter new data (leave blank to keep current value):")
         updated_data = {}
-        for key, value in current_data.items():
-            if key == "album_id":  # Skip the primary key
-                continue
-            new_value = input(f"{key} [{value}]: ").strip()
-            updated_data[key] = new_value if new_value else value
+        for key, value in current_album.__dict__.items():
+            if not key.startswith('_') and key != "album_id":  # Skip private attributes and primary key
+                new_value = input(f"{key} [{value}]: ").strip()
+                updated_data[key] = new_value if new_value else value
 
         # Update the album in the database
         Album.update_in_db(self.db, album_id, **updated_data)
@@ -338,7 +341,8 @@ class ETLSystem:
         """
         song_id = input("Enter Song ID: ")
         album_id = input("Enter Album ID: ")
-        AlbumSongs.add_song_to_album(self.db, album_id, song_id)
+        album_songs = AlbumSongs(self.db)  # Create an instance of AlbumSongs
+        album_songs.add_song_to_album(album_id, song_id)  # Call the instance method
         print("Song added to album successfully!")
 
     def _remove_song_from_album(self):
@@ -347,10 +351,12 @@ class ETLSystem:
         """
         song_id = input("Enter Song ID: ")
         album_id = input("Enter Album ID: ")
-        AlbumSongs.remove_song_from_album(self.db, album_id, song_id)
+        album_songs = AlbumSongs(self.db)  # Create an instance of AlbumSongs
+        album_songs.remove_song_from_album(album_id, song_id)  # Call the instance method
         print("Song removed from album successfully!")
 
-    def _get_artist_input(self):
+    @staticmethod
+    def _get_artist_input():
         """
         Collect artist input from the user.
         """
@@ -372,7 +378,8 @@ class ETLSystem:
             "twitch_url": input("Twitch URL (optional): ") or None,
         }
 
-    def _get_song_input(self):
+    @staticmethod
+    def _get_song_input():
         """
         Collect song input from the user.
         """
@@ -405,7 +412,8 @@ class ETLSystem:
                 "Enter featured artist IDs (comma-separated, or leave blank if none): ").strip().split(',') or [],
         }
 
-    def _get_album_input(self):
+    @staticmethod
+    def _get_album_input():
         """
         Collect album input from the user.
         """
@@ -443,8 +451,8 @@ class ETLSystem:
 
             # Save the JSON response to a file
             file_path = os.path.join(raw_data_dir, filename)
-            with open(file_path, "w") as json_file:
-                json.dump(artist_info, json_file, indent=4, default=str)  # Use default=str to handle datetime
+            with io.TextIOWrapper(open(file_path, "wb"), encoding="utf-8") as json_file:
+                json.dump(artist_info, json_file, indent=4, default=str)
             print(f"Artist information saved to {file_path}")
         except Exception as e:
             print(f"Error fetching artist information: {e}")
@@ -455,13 +463,15 @@ class ETLSystem:
             print(f"Directory {raw_data_dir} does not exist.")
             return
 
+        album_songs = AlbumSongs(self.db)  # Create an instance of AlbumSongs
+
         for filename in os.listdir(raw_data_dir):
             if filename.endswith(".json"):
                 file_path = os.path.join(raw_data_dir, filename)
                 print(f"Processing file: {file_path}")
 
                 try:
-                    with open(file_path, "r") as json_file:
+                    with open(file_path, "r", encoding="utf-8") as json_file:  # Explicitly specify encoding
                         artist_data = json.load(json_file)
 
                     # Debug: Print the JSON structure
@@ -543,9 +553,9 @@ class ETLSystem:
                                     print(f"Error saving song {song.name}: {e}")
 
                             # Link song to album if not already linked
-                            if not AlbumSongs.check_song_in_album(self.db, album.album_id, song.song_id):
+                            if not album_songs.check_song_in_album(album.album_id, song.song_id):
                                 try:
-                                    AlbumSongs.add_song_to_album(self.db, album.album_id, song.song_id)
+                                    album_songs.add_song_to_album(album.album_id, song.song_id)
                                     print(f"Linked song {song.name} to album {album.name}")
                                 except Exception as e:
                                     print(f"Error linking song to album: {e}")

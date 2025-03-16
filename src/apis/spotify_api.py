@@ -176,6 +176,41 @@ class SpotifyAPI:
     def fetch_and_store_artist_data(self, db_connector, artist_id):
         pass
 
+    def fetch_playlist_data(self, playlist_id):
+        """
+        Fetch playlist data from Spotify using the playlist ID.
+        """
+        try:
+            # Ensure the token is valid
+            self._check_token_expiry()
+
+            # Spotify API endpoint for fetching playlist details
+            url = f"https://api.spotify.com/v1/playlists/{playlist_id}"
+            headers = {
+                "Authorization": f"Bearer {self.token}"
+            }
+            response = requests.get(url, headers=headers)
+
+            if response.status_code == 200:
+                playlist_data = response.json()
+                return {
+                    "name": playlist_data.get("name"),
+                    "external_urls": playlist_data.get("external_urls", {}),
+                    # Add other fields as needed
+                }
+            elif response.status_code == 401:  # Unauthorized
+                print("Token expired or invalid. Refreshing token...")
+                self.token = _get_access_token()  # Refresh the token
+                return self.fetch_playlist_data(playlist_id)  # Retry the request
+            elif response.status_code == 404:  # Not Found
+                print(f"Error: Playlist with ID '{playlist_id}' not found.")
+                return {}
+            else:
+                print(f"Error fetching playlist data: {response.status_code} - {response.text}")
+                return {}
+        except Exception as e:
+            print(f"Error in fetch_playlist_data: {e}")
+            return {}
 
 # Export functions for backward compatibility
 def fetch_and_store_artist_data(db_connector, artist_id):
@@ -191,4 +226,7 @@ def fetch_and_store_songs_by_artist(db_connector, artist_spotify_id):
     Fetch and store all songs for a given artist.
     """
     spotify_api = SpotifyAPI()
+
     spotify_api.fetch_and_store_songs_by_artist(db_connector, artist_spotify_id)
+
+

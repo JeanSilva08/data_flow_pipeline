@@ -68,6 +68,27 @@ class Song:
             print(f"Error saving song to database: {e}")
 
     @staticmethod
+    def update_in_db(db, song_id, **kwargs):
+        """
+        Update a song's information in the database.
+        """
+        try:
+            # Build the SET clause for the SQL query
+            set_clause = ", ".join([f"{key} = %s" for key in kwargs.keys()])
+            values = list(kwargs.values())
+            values.append(song_id)  # Add song_id for the WHERE clause
+
+            query = f"""
+                    UPDATE songs
+                    SET {set_clause}
+                    WHERE song_id = %s
+                """
+            db.execute_query(query, values)
+            print("Song updated successfully!")
+        except Exception as e:
+            print(f"Error updating song: {e}")
+
+    @staticmethod
     def delete_from_db(db, song_id):
         try:
             query = "DELETE FROM songs WHERE song_id = %s"
