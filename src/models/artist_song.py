@@ -1,47 +1,46 @@
+from src.models.song import Song
+
+
 class ArtistSongs:
     def __init__(self, db):
         self.db = db
 
     @staticmethod
     def add_song_for_artist(db, artist_id, song_id):
-        query = "INSERT INTO artist_songs (artist_id, song_id) VALUES (%s, %s)"
-        db.execute_query(query, (artist_id, song_id))
+        try:
+            query = "INSERT INTO artist_songs (artist_id, song_id) VALUES (%s, %s)"
+            db.execute_query(query, (artist_id, song_id))
+            print("Song added for artist successfully!")
+        except Exception as e:
+            print(f"Error adding song for artist: {e}")
 
     def get_songs_by_artist(self, artist_id):
-        """
-        Retrieves all songs associated with a specific artist.
-        """
-        cursor = self.db.connection.cursor()
+        cursor = self.db.connection.cursor(dictionary=True)
         query = """
             SELECT songs.* FROM songs
-            JOIN song_artists ON songs.song_id = song_artists.song_id
-            WHERE song_artists.artist_id = %s
+            JOIN artist_songs ON songs.song_id = artist_songs.song_id
+            WHERE artist_songs.artist_id = %s
         """
         cursor.execute(query, (artist_id,))
-        return cursor.fetchall()
+        return [Song(**row) for row in cursor.fetchall()]
 
     def get_artists_for_song(self, song_id):
-        """
-        Retrieves all artists associated with a specific song.
-        """
-        cursor = self.db.connection.cursor()
+        cursor = self.db.connection.cursor(dictionary=True)
         query = """
             SELECT artists.* FROM artists
-            JOIN song_artists ON artists.artist_id = song_artists.artist_id
-            WHERE song_artists.song_id = %s
+            JOIN artist_songs ON artists.artist_id = artist_songs.artist_id
+            WHERE artist_songs.song_id = %s
         """
         cursor.execute(query, (song_id,))
         return cursor.fetchall()
 
     def remove_song_from_artist(self, artist_id, song_id):
-        """
-        Removes a relationship between an artist and a song.
-        """
-        cursor = self.db.connection.cursor()
-        query = "DELETE FROM song_artists WHERE artist_id = %s AND song_id = %s"
-        cursor.execute(query, (artist_id, song_id))
-        self.db.connection.commit()
-        print(f"Removed artist {artist_id} from song {song_id}")
+        try:
+            query = "DELETE FROM artist_songs WHERE artist_id = %s AND song_id = %s"
+            self.db.execute_query(query, (artist_id, song_id))
+            print(f"Removed song {song_id} from artist {artist_id}")
+        except Exception as e:
+            print(f"Error removing song from artist: {e}")
 
     @staticmethod
     def get_all_artist_song_relationships(db):
@@ -55,6 +54,7 @@ class ArtistSongs:
 
     @staticmethod
     def check_song_for_artist(db, artist_id, song_id):
+        cursor = db.connection.cursor()
         query = "SELECT * FROM artist_songs WHERE artist_id = %s AND song_id = %s"
-        result = db.execute_query(query, (artist_id, song_id))
-        return bool(result)
+        cursor.execute(query, (artist_id, song_id))
+        return bool(cursor.fetchone())

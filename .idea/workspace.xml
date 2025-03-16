@@ -9,9 +9,7 @@
       <change afterPath="$PROJECT_DIR$/../portfolio" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/album.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/album.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/album_songs.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/album_songs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/artist.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/artist.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/artist_song.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/artist_song.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/song.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/song.py" afterDir="false" />
     </list>
