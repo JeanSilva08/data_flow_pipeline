@@ -14,6 +14,8 @@ import os
 import sys
 import io
 
+from src.scapers.spotify_songs_countview import SpotifySongsCountView
+
 # Add the project root to the system path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -60,6 +62,7 @@ class ETLSystem:
         print("18: Remover música de um álbum")
         print("19: Buscar todas as informações de um artista")
         print("20: Alimentar banco de dados spotify")
+        print("21: Atualizar contagem de streams das músicas")
 
     def run(self):
         """
@@ -110,6 +113,8 @@ class ETLSystem:
                 self._fetch_all_artist_info()
             elif choice == '20':  # New option for populating database from JSON
                 self._populate_database_from_json()
+            elif choice == '21':
+                self._update_songs_countview()
             else:
                 print("Invalid choice. Please try again.")
 
@@ -570,6 +575,11 @@ class ETLSystem:
 
                 except Exception as e:
                     print(f"Error processing file {filename}: {e}")
+
+    def _update_songs_countview(self):
+        """Update countviews for all songs."""
+        scraper = SpotifySongsCountView(self.db)
+        scraper.update_all_songs_countview()
 
     def close(self):
         pass
