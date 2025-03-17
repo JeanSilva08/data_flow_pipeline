@@ -13,7 +13,8 @@ class MonthlyListeners:
         self.driver = self._setup_driver()
         self.logger = self._setup_logger()
 
-    def _setup_driver(self):
+    @staticmethod
+    def _setup_driver():
         """Set up and return a headless Chrome WebDriver."""
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -25,7 +26,8 @@ class MonthlyListeners:
         service = Service(executable_path='/usr/bin/chromedriver')
         return webdriver.Chrome(service=service, options=chrome_options)
 
-    def _setup_logger(self):
+    @staticmethod
+    def _setup_logger():
         """Set up and return a logger."""
         logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
