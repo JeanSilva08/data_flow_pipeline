@@ -10,6 +10,10 @@ from src.scapers.spotify_monthly_listeners import MonthlyListeners
 from src.apis.spotify_api import fetch_and_store_artist_data, fetch_and_store_songs_by_artist, SpotifyAPI
 from src.database.db_connector import DBConnector
 from dotenv import load_dotenv
+from src.apis.youtube_api import YouTubeAPI
+from src.apis.youtube_music_api import YouTubeMusicAPI
+from src.scapers.youtube_scraper import YouTubeScraper
+from src.scapers.youtube_music_scraper import YouTubeMusicScraper
 import os
 import sys
 import io
@@ -35,6 +39,12 @@ class ETLSystem:
         )
         self.db.connect()
         self.spotify_api = SpotifyAPI()
+
+        # Initialize YouTube API and Scraper
+        self.youtube_api = YouTubeAPI(api_key=os.getenv('YOUTUBE_API_KEY'))
+        self.youtube_music_api = YouTubeMusicAPI(api_key=os.getenv('YOUTUBE_API_KEY'))  # Correct initialization
+        self.youtube_scraper = YouTubeScraper()
+        self.youtube_music_scraper = YouTubeMusicScraper()
 
     @staticmethod
     def display_menu():
@@ -63,6 +73,10 @@ class ETLSystem:
         print("19: Buscar todas as informações de um artista")
         print("20: Alimentar banco de dados spotify")
         print("21: Atualizar contagem de streams das músicas")
+        print("22: Atualizar visualizações do YouTube (API)")
+        print("23: Atualizar visualizações do YouTube Music (API)")
+        print("24: Atualizar visualizações do YouTube (Scraping)")
+        print("25: Atualizar visualizações do YouTube Music (Scraping)")
 
     def run(self):
         """
@@ -115,6 +129,14 @@ class ETLSystem:
                 self._populate_database_from_json()
             elif choice == '21':
                 self._update_songs_countview()
+            elif choice == '22':
+                self._update_youtube_views_api()
+            elif choice == '23':
+                self._update_youtube_music_views_api()
+            elif choice == '24':
+                self._update_youtube_views_scraping()
+            elif choice == '25':
+                self._update_youtube_music_views_scraping()
             else:
                 print("Invalid choice. Please try again.")
 
@@ -581,9 +603,39 @@ class ETLSystem:
         scraper = SpotifySongsCountView(self.db)
         scraper.update_all_songs_countview()
 
-    def close(self):
-        pass
+    def _update_youtube_views_api(self):
+        """
+        Update YouTube views using the YouTube API.
+        """
+        self.youtube_api.update_all_youtube_views(self.db)
+        print("YouTube views updated using API.")
 
+    def _update_youtube_music_views_api(self):
+        """
+        Update YouTube Music views using the YouTube Music API.
+        """
+        self.youtube_music_api.update_all_youtubemsc_views(self.db)
+        print("YouTube Music views updated using API.")
+
+    def _update_youtube_views_scraping(self):
+        """
+        Update YouTube views using web scraping.
+        """
+        self.youtube_scraper.update_all_youtube_views(self.db)
+        print("YouTube views updated using scraping.")
+
+    def _update_youtube_music_views_scraping(self):
+        """
+        Update YouTube Music views using web scraping.
+        """
+        self.youtube_music_scraper.update_all_youtubemsc_views(self.db)
+        print("YouTube Music views updated using scraping.")
+
+
+    def close(self):
+        self.youtube_scraper.close()
+        self.youtube_music_scraper.close()
+        self.db.close()
 
 if __name__ == "__main__":
     etl_system = ETLSystem()

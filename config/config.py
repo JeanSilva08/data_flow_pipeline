@@ -1,10 +1,9 @@
 from dotenv import load_dotenv
 import os
-from .oauth_loader import OAuthLoader
+from config.oauth_loader import OAuthLoader
 
 # Load environment variables from .env file
 load_dotenv()
-
 
 class Config:
     """

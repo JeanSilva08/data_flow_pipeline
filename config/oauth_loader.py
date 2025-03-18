@@ -1,9 +1,14 @@
 import json
 import os
+import logging
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class OAuthLoader:
@@ -18,25 +23,47 @@ class OAuthLoader:
         Load the OAuth configuration from the JSON file and environment variables.
         """
         try:
+            logger.info(f"Loading OAuth configuration from {self.oauth_file_path}")
+
+            # Load the base configuration from the JSON file
             with open(self.oauth_file_path, 'r') as f:
                 oauth_config = json.load(f)
 
-            # Load sensitive data from environment variables
-            oauth_config['google']['access_token'] = os.getenv('GOOGLE_ACCESS_TOKEN')
-            oauth_config['google']['refresh_token'] = os.getenv('GOOGLE_REFRESH_TOKEN')
-            oauth_config['google']['expires_at'] = int(os.getenv('GOOGLE_EXPIRES_AT', 0))
-            oauth_config['google']['expires_in'] = int(os.getenv('GOOGLE_EXPIRES_IN', 0))
+            # Validate and load Google OAuth credentials
+            google_config = oauth_config.get('google', {})
+            google_config['access_token'] = self._get_env_variable('GOOGLE_ACCESS_TOKEN')
+            google_config['refresh_token'] = self._get_env_variable('GOOGLE_REFRESH_TOKEN')
+            google_config['expires_at'] = int(self._get_env_variable('GOOGLE_EXPIRES_AT'))
+            google_config['expires_in'] = int(self._get_env_variable('GOOGLE_EXPIRES_IN'))
 
-            oauth_config['spotify']['client_id'] = os.getenv('SPOTIFY_CLIENT_ID')
-            oauth_config['spotify']['client_secret'] = os.getenv('SPOTIFY_CLIENT_SECRET')
+            # Validate and load Spotify OAuth credentials
+            spotify_config = oauth_config.get('spotify', {})
+            spotify_config['client_id'] = self._get_env_variable('SPOTIFY_CLIENT_ID')
+            spotify_config['client_secret'] = self._get_env_variable('SPOTIFY_CLIENT_SECRET')
 
+            logger.info("OAuth configuration loaded successfully")
             return oauth_config
         except Exception as e:
-            raise Exception(f"Error loading OAuth configuration: {e}")
+            logger.error(f"Error loading OAuth configuration: {e}")
+            raise
+
+    def _get_env_variable(self, key):
+        """
+        Retrieve an environment variable and raise an error if it is missing.
+        """
+        value = os.getenv(key)
+        if value is None:
+            error_msg = f"Missing required environment variable: {key}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        return value
 
 
 # Example usage
 if __name__ == "__main__":
-    oauth_loader = OAuthLoader('config/oauth.json')
-    oauth_config = oauth_loader.load_oauth_config()
-    print(json.dumps(oauth_config, indent=4))
+    try:
+        oauth_loader = OAuthLoader('config/oauth.json')
+        oauth_config = oauth_loader.load_oauth_config()
+        print(json.dumps(oauth_config, indent=4))
+    except Exception as e:
+        logger.error(f"Error: {e}")
