@@ -41,8 +41,8 @@ class ETLSystem:
         self.spotify_api = SpotifyAPI()
 
         # Initialize YouTube API and Scraper
-        self.youtube_api = YouTubeAPI(api_key=os.getenv('YOUTUBE_API_KEY'))
-        self.youtube_music_api = YouTubeMusicAPI(api_key=os.getenv('YOUTUBE_API_KEY'))  # Correct initialization
+        self.youtube_api = YouTubeAPI(api_key=os.getenv('YOUTUBE_API_KEY'), db=self.db)
+        self.youtube_music_api = YouTubeMusicAPI(api_key=os.getenv('YOUTUBE_API_KEY'), db=self.db)  # Correct initialization
         self.youtube_scraper = YouTubeScraper()
         self.youtube_music_scraper = YouTubeMusicScraper()
 
@@ -610,20 +610,26 @@ class ETLSystem:
                 except Exception as e:
                     print(f"Error processing file {filename}: {e}")
 
-
     def _update_youtube_views_api(self):
         """
         Update YouTube views using the YouTube API.
         """
-        self.youtube_api.update_all_youtube_views(self.db)
+        self.youtube_api.update_all_youtube_views()
         print("YouTube views updated using API.")
 
     def _update_youtube_music_views_api(self):
         """
         Update YouTube Music views using the YouTube Music API.
         """
-        self.youtube_music_api.update_all_youtubemsc_views(self.db)
-        print("YouTube Music views updated using API.")
+        try:
+            # Ensure the connection is open
+            if not self.db.is_connected():
+                self.db.connect()
+
+            self.youtube_music_api.update_all_youtubemsc_views(self.db)
+            print("YouTube Music views updated using API.")
+        except Exception as e:
+            print(f"Error updating YouTube Music views: {e}")
 
     def _update_youtube_views_scraping(self):
         """

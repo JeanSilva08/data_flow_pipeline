@@ -37,6 +37,12 @@ class DBConnector:
             logger.error(f"Error while connecting to MySQL: {e}")
             return None
 
+    def is_connected(self):
+        """
+        Check if the database connection is active.
+        """
+        return self.connection and self.connection.is_connected()
+
     def close(self):
         """
         Close the database connection if it is open.
