@@ -46,6 +46,9 @@ class ETLSystem:
         self.youtube_scraper = YouTubeScraper()
         self.youtube_music_scraper = YouTubeMusicScraper()
 
+        # Initialize SpotifySongsCountView
+        self.spotify_songs_countview = SpotifySongsCountView(self.db)
+
     @staticmethod
     def display_menu():
         """
@@ -141,6 +144,15 @@ class ETLSystem:
                 print("Invalid choice. Please try again.")
 
         self.close()
+
+    def _update_songs_countview(self):
+        """Update countviews for all songs."""
+        self.spotify_songs_countview.update_all_songs_countview()
+
+    def close(self):
+        self.youtube_scraper.close()
+        self.youtube_music_scraper.close()
+        self.db.close()
 
     def _add_artist(self):
         """
@@ -598,10 +610,6 @@ class ETLSystem:
                 except Exception as e:
                     print(f"Error processing file {filename}: {e}")
 
-    def _update_songs_countview(self):
-        """Update countviews for all songs."""
-        scraper = SpotifySongsCountView(self.db)
-        scraper.update_all_songs_countview()
 
     def _update_youtube_views_api(self):
         """
@@ -632,10 +640,6 @@ class ETLSystem:
         print("YouTube Music views updated using scraping.")
 
 
-    def close(self):
-        self.youtube_scraper.close()
-        self.youtube_music_scraper.close()
-        self.db.close()
 
 if __name__ == "__main__":
     etl_system = ETLSystem()
