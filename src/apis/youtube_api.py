@@ -21,6 +21,9 @@ class YouTubeAPI:
         self.db = db
 
     def get_video_views(self, video_id):
+        if not video_id or len(video_id) != 11:  # Standard YouTube ID length
+            logger.warning(f"Invalid video ID: {video_id}")
+            return 0
         """
         Fetch the view count for a YouTube video using its video ID.
 
@@ -45,22 +48,65 @@ class YouTubeAPI:
         Update the YouTube views for all songs in the database.
         """
         try:
+            # Ensure database connection is active
+            if not self.db.is_connected():
+                self.db.connect()
+
             # Fetch all songs with valid YouTube IDs
-            songs = self.db.fetch_all("SELECT song_id, youtube_id, main_artist_id FROM songs WHERE youtube_id IS NOT NULL")
+            songs = self.db.fetch_all(
+                "SELECT song_id, youtube_id, main_artist_id FROM songs WHERE youtube_id IS NOT NULL"
+            )
             if not songs:
                 logger.warning("No songs found with valid YouTube IDs.")
                 return
 
+            # Track total views per artist for media kit
+            artist_views = {}
+
             # Update views for each song
             for song in songs:
                 song_id, youtube_id, artist_id = song
-                views = self.get_video_views(youtube_id)
-                if views:
-                    self._save_youtube_views(song_id, artist_id, views)
-                    logger.info(f"Updated YouTube views for song ID {song_id}: {views} views")
+                try:
+                    views = self.get_video_views(youtube_id)
+                    if views > 0:  # Only update if we got valid views
+                        self._save_youtube_views(song_id, artist_id, views)
+                        logger.info(f"Updated YouTube views for song ID {song_id}: {views} views")
+
+                        # Update artist total
+                        artist_views[artist_id] = artist_views.get(artist_id, 0) + views
+                except Exception as e:
+                    logger.error(f"Error processing song ID {song_id}: {e}")
+                    continue
+
+            # Update media kit data with total YouTube views per artist
+            self._update_media_kit_views(artist_views)
 
         except Exception as e:
             logger.error(f"Error updating YouTube views: {e}")
+            raise  # Re-raise to handle in calling function
+
+    def _update_media_kit_views(self, artist_views):
+        """Update media_kit_data with total YouTube views per artist"""
+        if not artist_views:
+            return
+
+        connection = self.db.connect()
+        cursor = connection.cursor()
+        try:
+            for artist_id, total_views in artist_views.items():
+                cursor.execute("""
+                    INSERT INTO media_kit_data (artist_id, youtube_views)
+                    VALUES (%s, %s)
+                    ON DUPLICATE KEY UPDATE youtube_views = %s
+                """, (artist_id, total_views, total_views))
+            connection.commit()
+            logger.info("Updated media_kit_data with YouTube view totals")
+        except Exception as e:
+            logger.error(f"Error updating media kit data: {e}")
+            connection.rollback()
+        finally:
+            cursor.close()
+            connection.close()
 
     def _save_youtube_views(self, song_id, artist_id, views):
         """
@@ -88,3 +134,4 @@ class YouTubeAPI:
         finally:
             cursor.close()
             connection.close()
+

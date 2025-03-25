@@ -8,10 +8,14 @@
       <change afterPath="$PROJECT_DIR$/../65496391" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../portfolio" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/database/db_connector.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/db_connector.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/apis/youtube_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/apis/youtube_api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/apis/youtube_music_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/apis/youtube_music_api.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/scapers/youtube_music_scraper.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/scapers/youtube_scraper.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/album.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/album.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/album_songs.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/album_songs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/artist.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/artist.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/artist_song.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/artist_song.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/song.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/song.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

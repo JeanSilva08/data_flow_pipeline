@@ -75,7 +75,7 @@ class ETLSystem:
         print("15: Salvar todas as músicas")
         print("16: Adicionar música a um álbum")
         print("17: Remover música de um álbum")
-        print("18: Buscar todas as informações de um artista")
+        print("18: Buscar todas as informações de um artista (SPotify)")
         print("19: Alimentar banco de dados spotify")
         print("20: Atualizar visualizações do Spotify (Scraping)")
         print("21: Atualizar visualizações do YouTube (API)")
@@ -201,15 +201,25 @@ class ETLSystem:
 
     def _add_song(self):
         """
-        Add a new song to the database.
+        Add a new song to the database and create album relationship if album_id is provided.
         """
         song_data = self._get_song_input()
-        Song.save_to_db(self.db, **song_data)
-        print("Song added successfully!")
+        song = Song(**song_data)
+        song.save_to_db(self.db)
+
+        # If album_id was provided, create the relationship
+        if song_data.get("album_id"):
+            album_songs = AlbumSongs(self.db)
+            if album_songs.add_song_to_album(song_data["album_id"], song.song_id):
+                print("Song added to album successfully!")
+            else:
+                print("Failed to add song to album")
+        else:
+            print("Song added successfully (no album specified)")
 
     def _edit_song(self):
         """
-        Edit an existing song in the database.
+        Edit an existing song in the database and update album relationships.
         """
         song_id = input("Enter Song ID to update: ").strip()
 
@@ -233,15 +243,44 @@ class ETLSystem:
                 new_value = input(f"{key} [{value}]: ").strip()
                 updated_data[key] = new_value if new_value else value
 
+        # Handle album changes
+        album_songs = AlbumSongs(self.db)
+        old_album_id = current_song.album_id
+        new_album_id = updated_data.get("album_id", old_album_id)
+
         # Update the song in the database
         Song.update_in_db(self.db, song_id, **updated_data)
+
+        # Handle album relationship changes
+        if str(old_album_id) != str(new_album_id):
+            # Remove from old album if it existed
+            if old_album_id and album_songs.check_song_in_album(old_album_id, song_id):
+                album_songs.remove_song_from_album(old_album_id, song_id)
+                print(f"Removed song from album {old_album_id}")
+
+            # Add to new album if specified
+            if new_album_id:
+                if album_songs.add_song_to_album(new_album_id, song_id):
+                    print(f"Added song to album {new_album_id}")
+                else:
+                    print(f"Failed to add song to album {new_album_id}")
+
         print("Song updated successfully!")
 
     def _delete_song(self):
         """
-        Delete a song from the database.
+        Delete a song from the database and remove all album relationships.
         """
         song_id = input("Enter Song ID to delete: ")
+
+        # First remove from all albums
+        album_songs = AlbumSongs(self.db)
+        albums = album_songs.get_albums_for_song(song_id)
+        for album in albums:
+            album_songs.remove_song_from_album(album.album_id, song_id)
+            print(f"Removed song from album {album.album_id}")
+
+        # Then delete the song
         Song.delete_from_db(self.db, song_id)
         print("Song deleted successfully!")
 
@@ -609,23 +648,22 @@ class ETLSystem:
                     print(f"Error processing file {filename}: {e}")
 
     def _update_youtube_views_api(self):
-        """
-        Update YouTube views using the YouTube API.
-        """
-        self.youtube_api.update_all_youtube_views()
-        print("YouTube views updated using API.")
-
-    def _update_youtube_music_views_api(self):
-        """
-        Update YouTube Music views using the YouTube Music API.
-        """
+        """Update YouTube views using the YouTube API."""
         try:
-            # Ensure the connection is open
             if not self.db.is_connected():
                 self.db.connect()
+            self.youtube_api.update_all_youtube_views()
+            print("YouTube views updated successfully!")
+        except Exception as e:
+            print(f"Error updating YouTube views: {e}")
 
+    def _update_youtube_music_views_api(self):
+        """Update YouTube Music views using the YouTube Music API."""
+        try:
+            if not self.db.is_connected():
+                self.db.connect()
             self.youtube_music_api.update_all_youtubemsc_views(self.db)
-            print("YouTube Music views updated using API.")
+            print("YouTube Music views updated successfully!")
         except Exception as e:
             print(f"Error updating YouTube Music views: {e}")
 

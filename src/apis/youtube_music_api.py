@@ -2,20 +2,73 @@ from src.apis.youtube_api import YouTubeAPI
 
 class YouTubeMusicAPI(YouTubeAPI):
     def update_all_youtubemsc_views(self, db):
+        """Update YouTube Music views for all songs"""
+        connection = None
         try:
+            # Ensure database connection
+            if not db.is_connected():
+                db.connect()
+
+            connection = db.connect()
+
             # Fetch all songs with valid YouTube Music IDs
-            songs = db.fetch_all("SELECT song_id, ytmsc_id, main_artist_id FROM songs WHERE ytmsc_id IS NOT NULL")
+            songs = db.fetch_all(
+                "SELECT song_id, ytmsc_id, main_artist_id FROM songs WHERE ytmsc_id IS NOT NULL"
+            )
+            if not songs:
+                logger.warning("No songs found with valid YouTube Music IDs.")
+                return
+
+            # Track total views per artist for media kit
+            artist_views = {}
+
             for song in songs:
                 song_id, ytmsc_id, artist_id = song
-                views = self.get_video_views(ytmsc_id)
-                if views:
-                    self.save_youtubemsc_views_to_db(db, song_id, artist_id, views)
-                    print(f"Updated YouTube Music views for song ID {song_id}: {views} views")
+                try:
+                    views = self.get_video_views(ytmsc_id)
+                    if views > 0:  # Only update if we got valid views
+                        self.save_youtubemsc_views_to_db(db, song_id, artist_id, views)
+                        logger.info(f"Updated YouTube Music views for song ID {song_id}: {views} views")
+
+                        # Update artist total
+                        artist_views[artist_id] = artist_views.get(artist_id, 0) + views
+                except Exception as e:
+                    logger.error(f"Error processing song ID {song_id}: {e}")
+                    continue
+
+            # Update media kit data with totals
+            self._update_media_kit_views(db, artist_views)
+
         except Exception as e:
-            print(f"Error updating YouTube Music views: {e}")
+            logger.error(f"Error updating YouTube Music views: {e}")
+            raise
         finally:
-            # Optionally close the connection if needed
-            pass
+            if connection:
+                connection.close()
+
+    @staticmethod
+    def _update_media_kit_views(db, artist_views):
+        """Update media_kit_data with YouTube Music view totals"""
+        if not artist_views:
+            return
+
+        connection = db.connect()
+        cursor = connection.cursor()
+        try:
+            for artist_id, total_views in artist_views.items():
+                cursor.execute("""
+                    INSERT INTO media_kit_data (artist_id, youtube_music_views)
+                    VALUES (%s, %s)
+                    ON DUPLICATE KEY UPDATE youtube_music_views = %s
+                """, (artist_id, total_views, total_views))
+            connection.commit()
+            logger.info("Updated media_kit_data with YouTube Music view totals")
+        except Exception as e:
+            logger.error(f"Error updating media kit data: {e}")
+            connection.rollback()
+        finally:
+            cursor.close()
+            connection.close()
 
     @staticmethod
     def save_youtubemsc_views_to_db(db, song_id, artist_id, views):
