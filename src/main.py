@@ -12,8 +12,8 @@ from src.database.db_connector import DBConnector
 from dotenv import load_dotenv
 from src.apis.youtube_api import YouTubeAPI
 from src.apis.youtube_music_api import YouTubeMusicAPI
-from src.scapers.youtube_scraper import YouTubeScraper
-from src.scapers.youtube_music_scraper import YouTubeMusicScraper
+from src.data_processor.media_kit_transformer import MediaKitTransformer
+from src.upload_bot.google_sheets_uploader import GoogleSheetsUploader
 import os
 import sys
 import io
@@ -42,12 +42,15 @@ class ETLSystem:
 
         # Initialize YouTube API and Scraper
         self.youtube_api = YouTubeAPI(api_key=os.getenv('YOUTUBE_API_KEY'), db=self.db)
-        self.youtube_music_api = YouTubeMusicAPI(api_key=os.getenv('YOUTUBE_API_KEY'), db=self.db)  # Correct initialization
-        self.youtube_scraper = YouTubeScraper()
-        self.youtube_music_scraper = YouTubeMusicScraper()
+        self.youtube_music_api = YouTubeMusicAPI(api_key=os.getenv('YOUTUBE_API_KEY'), db=self.db)
+
 
         # Initialize SpotifySongsCountView
         self.spotify_songs_countview = SpotifySongsCountView(self.db)
+
+        # Initialize MediaKitTransformer and GoogleSheetsUploader
+        self.media_kit_transformer = MediaKitTransformer(self.db)
+        self.google_sheets_uploader = GoogleSheetsUploader(self.db)
 
     @staticmethod
     def display_menu():
@@ -70,16 +73,16 @@ class ETLSystem:
         print("13: Ouvintes Mensais")
         print("14: Seguidores Spotify")
         print("15: Salvar todas as músicas")
-        print("16: Sair")
-        print("17: Adicionar música a um álbum")
-        print("18: Remover música de um álbum")
-        print("19: Buscar todas as informações de um artista")
-        print("20: Alimentar banco de dados spotify")
-        print("21: Atualizar contagem de streams das músicas")
-        print("22: Atualizar visualizações do YouTube (API)")
-        print("23: Atualizar visualizações do YouTube Music (API)")
-        print("24: Atualizar visualizações do YouTube (Scraping)")
-        print("25: Atualizar visualizações do YouTube Music (Scraping)")
+        print("16: Adicionar música a um álbum")
+        print("17: Remover música de um álbum")
+        print("18: Buscar todas as informações de um artista")
+        print("19: Alimentar banco de dados spotify")
+        print("20: Atualizar visualizações do Spotify (Scraping)")
+        print("21: Atualizar visualizações do YouTube (API)")
+        print("22: Atualizar visualizações do YouTube Music (API)")
+        print("23: Atualizar Media Kit Data")  # New option
+        print("24: Carregar Media Kit Data para Google Sheets")  # New option
+        print("25: Sair")
 
     def run(self):
         """
@@ -120,26 +123,26 @@ class ETLSystem:
             elif choice == '15':
                 self._fetch_songs_by_artist()
             elif choice == '16':
+                self._add_song_to_album()
+            elif choice == '17':
+                self._remove_song_from_album()
+            elif choice == '18':
+                self._fetch_all_artist_info()
+            elif choice == '19':
+                self._populate_database_from_json()
+            elif choice == '20':
+                self._update_songs_countview()
+            elif choice == '21':
+                self._update_youtube_views_api()
+            elif choice == '22':
+                self._update_youtube_music_views_api()
+            elif choice == '23':  # New option for updating Media Kit Data
+                self._update_media_kit_data()
+            elif choice == '24':  # New option for uploading Media Kit Data to Google Sheets
+                self._upload_media_kit_to_sheets()
+            elif choice == '25':
                 print("Exiting...")
                 break
-            elif choice == '17':
-                self._add_song_to_album()
-            elif choice == '18':
-                self._remove_song_from_album()
-            elif choice == '19':
-                self._fetch_all_artist_info()
-            elif choice == '20':  # New option for populating database from JSON
-                self._populate_database_from_json()
-            elif choice == '21':
-                self._update_songs_countview()
-            elif choice == '22':
-                self._update_youtube_views_api()
-            elif choice == '23':
-                self._update_youtube_music_views_api()
-            elif choice == '24':
-                self._update_youtube_views_scraping()
-            elif choice == '25':
-                self._update_youtube_music_views_scraping()
             else:
                 print("Invalid choice. Please try again.")
 
@@ -148,11 +151,6 @@ class ETLSystem:
     def _update_songs_countview(self):
         """Update countviews for all songs."""
         self.spotify_songs_countview.update_all_songs_countview()
-
-    def close(self):
-        self.youtube_scraper.close()
-        self.youtube_music_scraper.close()
-        self.db.close()
 
     def _add_artist(self):
         """
@@ -631,21 +629,30 @@ class ETLSystem:
         except Exception as e:
             print(f"Error updating YouTube Music views: {e}")
 
-    def _update_youtube_views_scraping(self):
-        """
-        Update YouTube views using web scraping.
-        """
-        self.youtube_scraper.update_all_youtube_views(self.db)
-        print("YouTube views updated using scraping.")
 
-    def _update_youtube_music_views_scraping(self):
+    def _update_media_kit_data(self):
         """
-        Update YouTube Music views using web scraping.
+        Update the media_kit_data table with transformed data.
         """
-        self.youtube_music_scraper.update_all_youtubemsc_views(self.db)
-        print("YouTube Music views updated using scraping.")
+        try:
+            self.media_kit_transformer.transform_and_load()
+            print("Media Kit Data updated successfully!")
+        except Exception as e:
+            print(f"Error updating Media Kit Data: {e}")
 
+    def _upload_media_kit_to_sheets(self):
+        """
+        Upload media_kit_data to Google Sheets.
+        """
+        try:
+            self.google_sheets_uploader.upload_to_sheets()
+            print("Media Kit Data uploaded to Google Sheets successfully!")
+        except Exception as e:
+            print(f"Error uploading Media Kit Data to Google Sheets: {e}")
 
+    def close(self):
+        """Close all resources safely"""
+        self.db.close()
 
 if __name__ == "__main__":
     etl_system = ETLSystem()

@@ -57,7 +57,7 @@ class DBConnector:
         """
         cursor = None
         try:
-            cursor = self.connection.cursor()
+            cursor = self.connection.cursor(dictionary=True)  # Return results as dictionaries
             cursor.execute(query, params or ())
             self.connection.commit()
             logger.info(f"Query executed successfully: {query}")
@@ -77,7 +77,7 @@ class DBConnector:
         """
         cursor = None
         try:
-            cursor = self.connection.cursor()
+            cursor = self.connection.cursor(dictionary=True)  # Return results as dictionaries
             cursor.execute(query, params or ())
             result = cursor.fetchone()
             logger.info(f"Fetched one row: {result}")
@@ -95,7 +95,7 @@ class DBConnector:
         """
         cursor = None
         try:
-            cursor = self.connection.cursor()
+            cursor = self.connection.cursor(dictionary=True)  # Return results as dictionaries
             cursor.execute(query, params or ())
             result = cursor.fetchall()
             logger.info(f"Fetched all rows: {result}")
