@@ -73,10 +73,8 @@ class SpotifyAPI:
 
         return {
             "artist_id": artist_id,
-            "name": artist_data['name'],
+            "artist_name": artist_data['name'],
             "followers": artist_data['followers']['total'],
-            "genres": artist_data['genres'],
-            "popularity": artist_data['popularity'],
             "timestamp": datetime.now()
         }
 
@@ -124,19 +122,18 @@ class SpotifyAPI:
     @staticmethod
     def store_artist_data(db_connector, artist_data):
         """
-        Store artist data in the database.
+        Store artist follower data in the database.
         """
         cursor = db_connector.connection.cursor()
         query = """
-            INSERT INTO spotify_artist_data (artist_id, name, followers, genres, popularity, timestamp)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO spotify_followers 
+            (artist_id, artist_name, followers, timestamp)
+            VALUES (%s, %s, %s, %s)
         """
         cursor.execute(query, (
             artist_data['artist_id'],
-            artist_data['name'],
+            artist_data['artist_name'],
             artist_data['followers'],
-            artist_data['genres'],
-            artist_data['popularity'],
             artist_data['timestamp']
         ))
         db_connector.connection.commit()
@@ -173,8 +170,6 @@ class SpotifyAPI:
         except Exception as e:
             print(f"Error fetching and adding songs: {e}")
 
-    def fetch_and_store_artist_data(self, db_connector, artist_id):
-        pass
 
     def fetch_playlist_data(self, playlist_id):
         """
@@ -212,13 +207,17 @@ class SpotifyAPI:
             print(f"Error in fetch_playlist_data: {e}")
             return {}
 
-# Export functions for backward compatibility
-def fetch_and_store_artist_data(db_connector, artist_id):
-    """
-    Fetch and store artist data from Spotify.
-    """
-    spotify_api = SpotifyAPI()
-    spotify_api.fetch_and_store_artist_data(db_connector, artist_id)
+
+    def fetch_and_store_artist_data(self, db_connector, artist_id):
+        """
+        Fetch and store artist follower data from Spotify.
+        """
+        try:
+            artist_data = self.fetch_artist_data(artist_id)
+            self.store_artist_data(db_connector, artist_data)
+            print(f"Saved Spotify followers for artist {artist_data['artist_name']}")
+        except Exception as e:
+            print(f"Error fetching/storing artist data: {e}")
 
 
 def fetch_and_store_songs_by_artist(db_connector, artist_spotify_id):

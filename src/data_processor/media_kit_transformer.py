@@ -20,16 +20,35 @@ class MediaKitTransformer:
 
     def _fetch_spotify_data(self, artist_id):
         """
-        Fetch Spotify data for a specific artist.
+        Fetch Spotify followers data for a specific artist.
+        First tries to match by artist_id in our artists table,
+        then falls back to the spotify_id if needed.
         """
         query = """
-            SELECT followers, song_count
-            FROM spotify_artist_data
-            WHERE artist_id = %s
-            ORDER BY timestamp DESC
+            SELECT sf.followers
+            FROM spotify_followers sf
+            WHERE sf.artist_id = (
+                SELECT a.spotify_id 
+                FROM artists a 
+                WHERE a.artist_id = %s
+            )
+            ORDER BY sf.timestamp DESC
             LIMIT 1
         """
-        return self.db.fetch_one(query, (artist_id,))
+        result = self.db.fetch_one(query, (artist_id,))
+
+        if not result:
+            # Fallback: try direct match if the artist_id is actually a spotify_id
+            query = """
+                SELECT followers
+                FROM spotify_followers
+                WHERE artist_id = %s
+                ORDER BY timestamp DESC
+                LIMIT 1
+            """
+            result = self.db.fetch_one(query, (artist_id,))
+
+        return result
 
     def _fetch_monthly_listeners(self, artist_id):
         """

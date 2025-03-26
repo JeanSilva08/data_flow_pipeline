@@ -7,7 +7,7 @@ from src.models.song import Song
 from src.models.album import Album
 from src.models.playlist import Playlist
 from src.scapers.spotify_monthly_listeners import MonthlyListeners
-from src.apis.spotify_api import fetch_and_store_artist_data, fetch_and_store_songs_by_artist, SpotifyAPI
+from src.apis.spotify_api import SpotifyAPI
 from src.database.db_connector import DBConnector
 from dotenv import load_dotenv
 from src.apis.youtube_api import YouTubeAPI
@@ -387,14 +387,14 @@ class ETLSystem:
 
     def _fetch_spotify_artist_data(self):
         """
-        Fetch and store Spotify artist data for all artists.
+        Fetch and store Spotify followers for all artists.
         """
         artists = Artist.get_all(self.db)
         for artist in artists:
             if artist.spotify_id:
                 try:
-                    fetch_and_store_artist_data(self.db, artist.spotify_id)
-                    print(f"Data for artist {artist.name} saved successfully.")
+                    self.spotify_api.fetch_and_store_artist_data(self.db, artist.spotify_id)
+                    print(f"Followers for artist {artist.name} saved successfully.")
                 except Exception as e:
                     print(f"Error fetching data for artist {artist.name}: {e}")
             else:
@@ -406,7 +406,7 @@ class ETLSystem:
         """
         artist_spotify_id = input("Enter the Artist Spotify ID: ").strip()
         try:
-            fetch_and_store_songs_by_artist(self.db, artist_spotify_id)
+            self.spotify_api.fetch_and_store_songs_by_artist(self.db, artist_spotify_id)
             print("Songs added successfully!")
         except Exception as e:
             print(f"Error fetching songs: {e}")
