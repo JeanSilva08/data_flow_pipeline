@@ -96,22 +96,31 @@ class SpotifySongsCountView:
 
     def _save_countview_to_db(self, song_id, artist_id, countview):
         """
-        Save the play count to the database.
-
-        Args:
-            song_id (int): Song ID in the database.
-            artist_id (int): Artist ID in the database.
-            countview (int): Play count.
+        Save the play count to the database with song and album info.
         """
         if isinstance(countview, int):
             connection = self.db_connector.connect()
             cursor = connection.cursor()
             try:
+                # First get song and album info
+                cursor.execute("""
+                    SELECT s.name, a.name, s.album_id 
+                    FROM songs s
+                    LEFT JOIN albums a ON s.album_id = a.album_id
+                    WHERE s.song_id = %s
+                """, (song_id,))
+                song_info = cursor.fetchone()
+
+                song_name = song_info[0] if song_info else None
+                album_name = song_info[1] if song_info else None
+                album_id = song_info[2] if song_info else None
+
                 query = """
-                    INSERT INTO spotify_song_countview (song_id, artist_id, countview)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO spotify_song_countview 
+                    (song_id, artist_id, countview, song_name, album_name, album_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (song_id, artist_id, countview))
+                cursor.execute(query, (song_id, artist_id, countview, song_name, album_name, album_id))
                 connection.commit()
                 self.logger.info(f"Saved {countview} streams for song ID {song_id}")
             except Exception as e:
@@ -170,3 +179,4 @@ class SpotifySongsCountView:
 
         self.driver.quit()
         self.logger.info("Finished updating play counts for all songs.")
+

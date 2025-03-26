@@ -44,12 +44,30 @@ class YouTubeMusicAPI(YouTubeAPI):
         cursor = None
         try:
             cursor = self.db.connection.cursor()
+            # First get song and album info
+            cursor.execute("""
+                SELECT s.name, a.name, s.album_id 
+                FROM songs s
+                LEFT JOIN albums a ON s.album_id = a.album_id
+                WHERE s.song_id = %s
+            """, (song_id,))
+            song_info = cursor.fetchone()
+
+            song_name = song_info[0] if song_info else None
+            album_name = song_info[1] if song_info else None
+            album_id = song_info[2] if song_info else None
+
             query = """
-                INSERT INTO youtubemsc_song_countview (song_id, artist_id, countview)
-                VALUES (%s, %s, %s)
-                ON DUPLICATE KEY UPDATE countview = %s
+                INSERT INTO youtubemsc_song_countview 
+                (song_id, artist_id, countview, song_name, album_name, album_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    countview = VALUES(countview),
+                    song_name = VALUES(song_name),
+                    album_name = VALUES(album_name),
+                    album_id = VALUES(album_id)
             """
-            cursor.execute(query, (song_id, artist_id, views, views))
+            cursor.execute(query, (song_id, artist_id, views, song_name, album_name, album_id))
             self.db.connection.commit()
             logger.info(f"Saved YouTube Music views for song ID {song_id}.")
         except Exception as e:

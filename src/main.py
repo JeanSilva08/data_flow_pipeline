@@ -83,6 +83,7 @@ class ETLSystem:
         print("23: Atualizar Media Kit Data")  # New option
         print("24: Carregar Media Kit Data para Google Sheets")  # New option
         print("25: Sair")
+        print("29: Backfill Countview Data")  # Add this line
 
     def run(self):
         """
@@ -143,6 +144,8 @@ class ETLSystem:
             elif choice == '25':
                 print("Exiting...")
                 break
+            elif choice == '29':
+                self.backfill_countview_data()
             else:
                 print("Invalid choice. Please try again.")
 
@@ -688,9 +691,64 @@ class ETLSystem:
         except Exception as e:
             print(f"Error uploading Media Kit Data to Google Sheets: {e}")
 
-    def close(self):
-        """Close all resources safely"""
-        self.db.close()
+    def backfill_countview_data(self):
+        """
+        Backfill song_name, album_name, and album_id for existing records in countview tables
+        """
+        connection = self.db.connect()
+        cursor = connection.cursor()
+
+        try:
+            print("Starting countview data backfill...")
+
+            # Update spotify_song_countview
+            cursor.execute("""
+                UPDATE spotify_song_countview ssc
+                JOIN songs s ON ssc.song_id = s.song_id
+                LEFT JOIN albums a ON s.album_id = a.album_id
+                SET 
+                    ssc.song_name = s.name,
+                    ssc.album_name = a.name,
+                    ssc.album_id = s.album_id
+                WHERE ssc.song_name IS NULL
+            """)
+            print(f"Updated {cursor.rowcount} rows in spotify_song_countview")
+
+            # Update youtube_song_countview
+            cursor.execute("""
+                UPDATE youtube_song_countview ysc
+                JOIN songs s ON ysc.song_id = s.song_id
+                LEFT JOIN albums a ON s.album_id = a.album_id
+                SET 
+                    ysc.song_name = s.name,
+                    ysc.album_name = a.name,
+                    ysc.album_id = s.album_id
+                WHERE ysc.song_name IS NULL
+            """)
+            print(f"Updated {cursor.rowcount} rows in youtube_song_countview")
+
+            # Update youtubemsc_song_countview
+            cursor.execute("""
+                UPDATE youtubemsc_song_countview ymsc
+                JOIN songs s ON ymsc.song_id = s.song_id
+                LEFT JOIN albums a ON s.album_id = a.album_id
+                SET 
+                    ymsc.song_name = s.name,
+                    ymsc.album_name = a.name,
+                    ymsc.album_id = s.album_id
+                WHERE ymsc.song_name IS NULL
+            """)
+            print(f"Updated {cursor.rowcount} rows in youtubemsc_song_countview")
+
+            connection.commit()
+            print("Countview data backfill completed successfully!")
+        except Exception as e:
+            connection.rollback()
+            print(f"Error backfilling countview data: {e}")
+            raise
+        finally:
+            cursor.close()
+            connection.close()
 
 if __name__ == "__main__":
     etl_system = ETLSystem()
