@@ -1,4 +1,10 @@
+import logging
+from googleapiclient.errors import HttpError
 from src.apis.youtube_api import YouTubeAPI
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class YouTubeMusicAPI(YouTubeAPI):
     def update_all_youtubemsc_views(self, db):
@@ -13,7 +19,7 @@ class YouTubeMusicAPI(YouTubeAPI):
 
             # Fetch all songs with valid YouTube Music IDs
             songs = db.fetch_all(
-                "SELECT song_id, ytmsc_id, main_artist_id FROM songs WHERE ytmsc_id IS NOT NULL"
+                "SELECT song_id, ytmsc_id, main_artist_id FROM songs WHERE ytmsc_id IS NOT NULL AND ytmsc_id != ''"
             )
             if not songs:
                 logger.warning("No songs found with valid YouTube Music IDs.")
@@ -23,8 +29,15 @@ class YouTubeMusicAPI(YouTubeAPI):
             artist_views = {}
 
             for song in songs:
-                song_id, ytmsc_id, artist_id = song
+                song_id = song['song_id']
+                ytmsc_id = song['ytmsc_id']
+                artist_id = song['main_artist_id']
+
                 try:
+                    if not ytmsc_id or len(ytmsc_id) != 11:  # Standard YouTube ID length
+                        logger.warning(f"Invalid video ID for song {song_id}: {ytmsc_id}")
+                        continue
+
                     views = self.get_video_views(ytmsc_id)
                     if views > 0:  # Only update if we got valid views
                         self.save_youtubemsc_views_to_db(db, song_id, artist_id, views)
@@ -70,6 +83,7 @@ class YouTubeMusicAPI(YouTubeAPI):
             cursor.close()
             connection.close()
 
+
     @staticmethod
     def save_youtubemsc_views_to_db(db, song_id, artist_id, views):
         connection = None
@@ -84,9 +98,9 @@ class YouTubeMusicAPI(YouTubeAPI):
             """
             cursor.execute(query, (song_id, artist_id, views, views))
             connection.commit()
-            print(f"Saved YouTube Music views for song ID {song_id}.")
+            logger.info(f"Saved YouTube Music views for song ID {song_id}.")
         except Exception as e:
-            print(f"Error saving YouTube Music views for song ID {song_id}: {e}")
+            logger.error(f"Error saving YouTube Music views for song ID {song_id}: {e}")
             if connection:
                 connection.rollback()
         finally:
