@@ -4,7 +4,6 @@ from src.database.db_connector import DBConnector
 
 logger = logging.getLogger(__name__)
 
-
 class MediaKitTransformer:
     def __init__(self, db: DBConnector):
         self.db = db
@@ -45,39 +44,69 @@ class MediaKitTransformer:
         """
         return self.db.fetch_one(query, (artist_id,))
 
-    def _fetch_youtube_views(self, artist_id):
+    def _fetch_latest_youtube_views(self, artist_id):
         """
-        Fetch total YouTube views for a specific artist.
+        Fetch latest YouTube views for a specific artist's songs.
+        Only sums the most recent view count for each song.
         """
         query = """
-            SELECT SUM(countview) AS total_views
-            FROM youtube_song_countview
-            WHERE artist_id = %s
+            SELECT SUM(latest_views.countview) AS total_views
+            FROM (
+                SELECT ysc.song_id, ysc.countview
+                FROM youtube_song_countview ysc
+                INNER JOIN (
+                    SELECT song_id, MAX(scraped_at) AS latest_scrape
+                    FROM youtube_song_countview
+                    WHERE artist_id = %s
+                    GROUP BY song_id
+                ) latest ON ysc.song_id = latest.song_id AND ysc.scraped_at = latest.latest_scrape
+                WHERE ysc.artist_id = %s
+            ) AS latest_views
         """
-        return self.db.fetch_one(query, (artist_id,))
+        return self.db.fetch_one(query, (artist_id, artist_id))
 
-    def _fetch_youtube_music_views(self, artist_id):
+    def _fetch_latest_youtube_music_views(self, artist_id):
         """
-        Fetch total YouTube Music views for a specific artist.
+        Fetch latest YouTube Music views for a specific artist's songs.
+        Only sums the most recent view count for each song.
         """
         query = """
-            SELECT SUM(countview) AS total_views
-            FROM youtubemsc_song_countview
-            WHERE artist_id = %s
+            SELECT SUM(latest_views.countview) AS total_views
+            FROM (
+                SELECT ymsc.song_id, ymsc.countview
+                FROM youtubemsc_song_countview ymsc
+                INNER JOIN (
+                    SELECT song_id, MAX(scraped_at) AS latest_scrape
+                    FROM youtubemsc_song_countview
+                    WHERE artist_id = %s
+                    GROUP BY song_id
+                ) latest ON ymsc.song_id = latest.song_id AND ymsc.scraped_at = latest.latest_scrape
+                WHERE ymsc.artist_id = %s
+            ) AS latest_views
         """
-        return self.db.fetch_one(query, (artist_id,))
+        return self.db.fetch_one(query, (artist_id, artist_id))
 
-    def _fetch_spotify_song_count(self, artist_id):
+    def _fetch_latest_spotify_song_count(self, artist_id):
         """
-        Fetch the sum of all song count views for a specific artist from spotify_song_countview.
+        Fetch the sum of latest song count views for a specific artist from spotify_song_countview.
+        Only sums the most recent view count for each song.
         """
         query = """
-            SELECT SUM(countview) AS total_song_count
-            FROM spotify_song_countview
-            WHERE artist_id = %s
+            SELECT SUM(latest_views.countview) AS total_song_count
+            FROM (
+                SELECT ssc.song_id, ssc.countview
+                FROM spotify_song_countview ssc
+                INNER JOIN (
+                    SELECT song_id, MAX(scraped_at) AS latest_scrape
+                    FROM spotify_song_countview
+                    WHERE artist_id = %s
+                    GROUP BY song_id
+                ) latest ON ssc.song_id = latest.song_id AND ssc.scraped_at = latest.latest_scrape
+                WHERE ssc.artist_id = %s
+            ) AS latest_views
         """
-        result = self.db.fetch_one(query, (artist_id,))
-        return result["total_song_count"] if result else None
+        result = self.db.fetch_one(query, (artist_id, artist_id))
+        return result["total_song_count"] if result and result["total_song_count"] else None
 
     def transform_and_load(self):
         """
@@ -88,17 +117,9 @@ class MediaKitTransformer:
             artist_id = artist["artist_id"]
             spotify_data = self._fetch_spotify_data(artist_id)
             monthly_listeners = self._fetch_monthly_listeners(artist_id)
-            youtube_views = self._fetch_youtube_views(artist_id)
-            youtube_music_views = self._fetch_youtube_music_views(artist_id)
-            spotify_song_count = self._fetch_spotify_song_count(artist_id)
-
-            # Log fetched data for debugging
-            logger.info(f"Artist ID: {artist_id}")
-            logger.info(f"Spotify Data: {spotify_data}")
-            logger.info(f"Monthly Listeners: {monthly_listeners}")
-            logger.info(f"YouTube Views: {youtube_views}")
-            logger.info(f"YouTube Music Views: {youtube_music_views}")
-            logger.info(f"Spotify Song Count: {spotify_song_count}")
+            youtube_views = self._fetch_latest_youtube_views(artist_id)
+            youtube_music_views = self._fetch_latest_youtube_music_views(artist_id)
+            spotify_song_count = self._fetch_latest_spotify_song_count(artist_id)
 
             # Prepare data for media_kit_data
             media_kit_data = {
@@ -106,7 +127,7 @@ class MediaKitTransformer:
                 "artist_name": artist.get("name"),
                 "category": artist.get("category"),
                 "record_label": artist.get("r_label"),
-                "spotify_song_count": spotify_song_count,  # Use the fetched song count
+                "spotify_song_count": spotify_song_count,
                 "spotify_monthly_listeners": monthly_listeners.get("listeners") if monthly_listeners else None,
                 "spotify_followers": spotify_data.get("followers") if spotify_data else None,
                 "youtube_views": youtube_views.get("total_views") if youtube_views else None,
