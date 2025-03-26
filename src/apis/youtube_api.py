@@ -91,12 +91,13 @@ class YouTubeAPI:
             logger.error(f"Error updating YouTube views: {e}")
             raise
 
+
     def _update_media_kit_views(self, artist_views):
         """Update media_kit_data with total YouTube views per artist"""
         if not artist_views:
             return
 
-        connection = self.db.connect()
+        connection = self.db.connection  # Use the existing connection
         cursor = connection.cursor()
         try:
             for artist_id, total_views in artist_views.items():
@@ -112,32 +113,26 @@ class YouTubeAPI:
             connection.rollback()
         finally:
             cursor.close()
-            connection.close()
 
     def _save_youtube_views(self, song_id, artist_id, views):
         """
-        Save the YouTube views to the `youtube_song_countview` table.
-
-        Args:
-            song_id (int): ID of the song.
-            artist_id (int): ID of the main artist.
-            views (int): Number of views.
+        Save the YouTube views to the database using the existing connection.
         """
-        connection = self.db.connect()
-        cursor = connection.cursor()
+        cursor = None
         try:
+            cursor = self.db.connection.cursor()
             query = """
                 INSERT INTO youtube_song_countview (song_id, artist_id, countview)
                 VALUES (%s, %s, %s)
                 ON DUPLICATE KEY UPDATE countview = %s
             """
             cursor.execute(query, (song_id, artist_id, views, views))
-            connection.commit()
+            self.db.connection.commit()
             logger.info(f"Saved YouTube views for song ID {song_id}.")
         except Exception as e:
             logger.error(f"Failed to save YouTube views for song ID {song_id}: {e}")
-            connection.rollback()
+            self.db.connection.rollback()
         finally:
-            cursor.close()
-            connection.close()
+            if cursor:
+                cursor.close()
 

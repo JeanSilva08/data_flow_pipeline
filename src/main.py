@@ -662,7 +662,7 @@ class ETLSystem:
         try:
             if not self.db.is_connected():
                 self.db.connect()
-            self.youtube_music_api.update_all_youtubemsc_views(self.db)
+            self.youtube_music_api.update_all_youtubemsc_views()  # Removed the db parameter
             print("YouTube Music views updated successfully!")
         except Exception as e:
             print(f"Error updating YouTube Music views: {e}")
