@@ -86,13 +86,13 @@ class MediaKitTransformer:
         """
         return self.db.fetch_one(query, (artist_id, artist_id))
 
-    def _fetch_latest_spotify_song_count(self, artist_id):
+    def _fetch_latest_spotify_streams(self, artist_id):
         """
-        Fetch the sum of latest song count views for a specific artist from spotify_song_countview.
-        Only sums the most recent view count for each song.
+        Fetch the sum of latest song streams for a specific artist from spotify_song_countview.
+        Only sums the most recent stream count for each song.
         """
         query = """
-            SELECT SUM(latest_views.countview) AS total_song_count
+            SELECT SUM(latest_views.countview) AS total_streams
             FROM (
                 SELECT ssc.song_id, ssc.countview
                 FROM spotify_song_countview ssc
@@ -106,7 +106,19 @@ class MediaKitTransformer:
             ) AS latest_views
         """
         result = self.db.fetch_one(query, (artist_id, artist_id))
-        return result["total_song_count"] if result and result["total_song_count"] else None
+        return result["total_streams"] if result and result["total_streams"] else None
+
+    def _fetch_artist_song_count(self, artist_id):
+        """
+        Fetch the count of songs registered for a specific artist in the songs table.
+        """
+        query = """
+            SELECT COUNT(*) AS song_count
+            FROM songs
+            WHERE main_artist_id = %s
+        """
+        result = self.db.fetch_one(query, (artist_id,))
+        return result["song_count"] if result else 0
 
     def transform_and_load(self):
         """
@@ -119,7 +131,8 @@ class MediaKitTransformer:
             monthly_listeners = self._fetch_monthly_listeners(artist_id)
             youtube_views = self._fetch_latest_youtube_views(artist_id)
             youtube_music_views = self._fetch_latest_youtube_music_views(artist_id)
-            spotify_song_count = self._fetch_latest_spotify_song_count(artist_id)
+            spotify_total_streams = self._fetch_latest_spotify_streams(artist_id)
+            spotify_song_count = self._fetch_artist_song_count(artist_id)
 
             # Prepare data for media_kit_data
             media_kit_data = {
@@ -127,7 +140,8 @@ class MediaKitTransformer:
                 "artist_name": artist.get("name"),
                 "category": artist.get("category"),
                 "record_label": artist.get("r_label"),
-                "spotify_song_count": spotify_song_count,
+                "spotify_song_count": spotify_song_count,  # Number of songs in database
+                "spotify_total_streams": spotify_total_streams,  # Total streams from Spotify
                 "spotify_monthly_listeners": monthly_listeners.get("listeners") if monthly_listeners else None,
                 "spotify_followers": spotify_data.get("followers") if spotify_data else None,
                 "youtube_views": youtube_views.get("total_views") if youtube_views else None,
@@ -144,14 +158,16 @@ class MediaKitTransformer:
         query = """
             INSERT INTO media_kit_data (
                 artist_id, artist_name, category, record_label,
-                spotify_song_count, spotify_monthly_listeners,
-                spotify_followers, youtube_views, youtube_music_views
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                spotify_song_count, spotify_total_streams,
+                spotify_monthly_listeners, spotify_followers,
+                youtube_views, youtube_music_views
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
                 artist_name = VALUES(artist_name),
                 category = VALUES(category),
                 record_label = VALUES(record_label),
                 spotify_song_count = VALUES(spotify_song_count),
+                spotify_total_streams = VALUES(spotify_total_streams),
                 spotify_monthly_listeners = VALUES(spotify_monthly_listeners),
                 spotify_followers = VALUES(spotify_followers),
                 youtube_views = VALUES(youtube_views),
@@ -160,8 +176,9 @@ class MediaKitTransformer:
         values = (
             data["artist_id"], data["artist_name"], data["category"],
             data["record_label"], data["spotify_song_count"],
-            data["spotify_monthly_listeners"], data["spotify_followers"],
-            data["youtube_views"], data["youtube_music_views"]
+            data["spotify_total_streams"], data["spotify_monthly_listeners"],
+            data["spotify_followers"], data["youtube_views"],
+            data["youtube_music_views"]
         )
         self.db.execute_query(query, values)
         logger.info(f"Updated media_kit_data for artist ID {data['artist_id']}")
